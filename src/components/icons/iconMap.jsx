@@ -1,0 +1,33 @@
+import {
+  Award,
+  BadgeCheck,
+  BookOpen,
+  CirclePlay,
+  FileAudio,
+  FileText,
+  GraduationCap,
+  Headphones,
+  Home,
+  Laptop,
+  Play,
+  Target,
+  Trophy,
+  Video,
+} from 'lucide-react';
+
+export const iconMap = {
+  Award,
+  BadgeCheck,
+  BookOpen,
+  CirclePlay,
+  FileAudio,
+  FileText,
+  GraduationCap,
+  Headphones,
+  Home,
+  Laptop,
+  Play,
+  Target,
+  Trophy,
+  Video,
+};
