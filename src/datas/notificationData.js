@@ -1,0 +1,38 @@
+export const notifications = [
+  {
+    id: 'homework-due-today',
+    title: 'Homework sắp đến hạn',
+    message: 'Write about your weekend cần nộp trước 20:00 hôm nay.',
+    time: '10 phút trước',
+    type: 'Homework',
+    unread: true,
+    path: '/homework',
+  },
+  {
+    id: 'quiz-open',
+    title: 'Quiz đã mở',
+    message: 'Grammar Checkpoint sẽ mở lúc 19:30, hãy ôn nhanh trước khi làm bài.',
+    time: '35 phút trước',
+    type: 'Quiz',
+    unread: true,
+    path: '/quiz/grammar-checkpoint',
+  },
+  {
+    id: 'certificate-issued',
+    title: 'Chứng chỉ mới',
+    message: 'Chứng chỉ Kỹ năng sống đã được cấp và có thể tải về.',
+    time: 'Hôm qua',
+    type: 'Chứng chỉ',
+    unread: false,
+    path: '/certificates',
+  },
+  {
+    id: 'badge-earned',
+    title: 'Mở khóa huy hiệu',
+    message: 'Bạn đã mở huy hiệu Certificate Hunter nhờ sở hữu 3 chứng chỉ.',
+    time: '2 ngày trước',
+    type: 'Thành tích',
+    unread: false,
+    path: '/achievements',
+  },
+];
