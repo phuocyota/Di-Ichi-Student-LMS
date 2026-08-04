@@ -1,22 +1,25 @@
-import CourseCard from '../components/cards/CourseCard.jsx';
+import { Navigate, useParams } from 'react-router-dom';
+import CourseDetail from '../components/CoursesPage/CourseDetail.jsx';
+import CourseGrid from '../components/CoursesPage/CourseGrid.jsx';
 import PageShell from '../components/common/PageShell.jsx';
-import { courses } from '../datas/lmsData.js';
+import { courses } from '../datas/courseData.js';
 
 function CoursesPage() {
+  const { courseId } = useParams();
+  const selectedCourse = courseId ? courses.find((course) => course.id === courseId) : null;
+
+  if (courseId && !selectedCourse) {
+    return <Navigate to="/courses" replace />;
+  }
+
+  if (selectedCourse) {
+    return <CourseDetail course={selectedCourse} />;
+  }
+
   return (
     <PageShell title="Khóa học của em" subtitle="Chọn khóa học để tiếp tục hành trình tiếng Anh.">
       <CourseGrid />
     </PageShell>
-  );
-}
-
-function CourseGrid() {
-  return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {courses.map((course) => (
-        <CourseCard key={course.title} course={course} />
-      ))}
-    </div>
   );
 }
 
