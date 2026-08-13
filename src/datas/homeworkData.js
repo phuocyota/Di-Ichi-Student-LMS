@@ -1,4 +1,44 @@
+import paintPracticeDocx from '../assets/documents/CDS_K1_TH11_T1 THỰC HÀNH VẼ TRÊN PAINT (TIẾT 2).docx?url';
+import paintPracticePdf from '../assets/documents/CDS_K1_TH11_T1 THỰC HÀNH VẼ TRÊN PAINT (TIẾT 2).pdf?url';
+import fallingApplesPptx from '../assets/documents/Falling Apples.pptx?url';
+import canvaIntroVideo from '../assets/documents/video_giới thiệu giao diện canva video.mp4?url';
+
 export const homeworkFilters = ['Tất cả', 'Cần nộp', 'Đang làm', 'Đã nộp', 'Đã chấm', 'Quá hạn'];
+
+const homeworkDocuments = {
+  paintPdf: {
+    title: 'Phiếu bài tập thực hành Paint',
+    fileName: 'CDS_K1_TH11_T1 THỰC HÀNH VẼ TRÊN PAINT (TIẾT 2).pdf',
+    previewType: 'pdf',
+    previewUrl: paintPracticePdf,
+    downloadUrl: paintPracticePdf,
+    format: 'PDF',
+  },
+  paintDocx: {
+    title: 'Phiếu bài tập thực hành Paint - bản Word',
+    fileName: 'CDS_K1_TH11_T1 THỰC HÀNH VẼ TRÊN PAINT (TIẾT 2).docx',
+    previewType: 'docx',
+    previewUrl: paintPracticePdf,
+    downloadUrl: paintPracticeDocx,
+    format: 'DOCX',
+  },
+  fallingApples: {
+    title: 'Falling Apples',
+    fileName: 'Falling Apples.pptx',
+    previewType: 'pptx',
+    previewUrl: fallingApplesPptx,
+    downloadUrl: fallingApplesPptx,
+    format: 'PPTX',
+  },
+  canvaVideo: {
+    title: 'Video giới thiệu giao diện Canva',
+    fileName: 'video_giới thiệu giao diện canva video.mp4',
+    previewType: 'video',
+    previewUrl: canvaIntroVideo,
+    downloadUrl: canvaIntroVideo,
+    format: 'MP4',
+  },
+};
 
 export const homework = [
   {
@@ -14,6 +54,7 @@ export const homework = [
     estimatedTime: '25 phút',
     instruction: 'Viết 80-100 từ về cuối tuần của em. Sử dụng ít nhất 5 động từ ở thì quá khứ đơn.',
     attachments: ['Writing Template.docx', 'Past Simple Verb List.pdf'],
+    assignmentFile: homeworkDocuments.paintDocx,
     rubric: [{ label: 'Nội dung', points: 4 }, { label: 'Ngữ pháp', points: 3 }, { label: 'Từ vựng', points: 2 }, { label: 'Trình bày', points: 1 }],
     feedback: 'Chưa có feedback. Giáo viên sẽ nhận xét sau khi em nộp bài.',
   },
@@ -30,6 +71,7 @@ export const homework = [
     estimatedTime: '35 phút',
     instruction: 'Hoàn thành trang 42-45 trong workbook. Kiểm tra lại phần pronunciation trước khi nộp.',
     attachments: ['Workbook Unit 6.pdf', 'Answer Sheet.xlsx'],
+    assignmentFile: homeworkDocuments.paintPdf,
     rubric: [{ label: 'Độ chính xác', points: 5 }, { label: 'Hoàn thành', points: 3 }, { label: 'Sạch đẹp', points: 2 }],
     feedback: 'Bài đang làm, chưa có nhận xét.',
   },
@@ -46,6 +88,7 @@ export const homework = [
     estimatedTime: '20 phút',
     instruction: 'Nghe track 06 hai lần, điền đáp án và ghi lại 3 từ mới em nghe được.',
     attachments: ['Listening Track 06.mp3', 'Listening Worksheet.pdf'],
+    assignmentFile: homeworkDocuments.canvaVideo,
     rubric: [{ label: 'Đáp án nghe', points: 6 }, { label: 'Từ mới', points: 2 }, { label: 'Ghi chú', points: 2 }],
     feedback: 'Bài sẽ mở sau buổi học Listening Mini Test.',
   },
@@ -62,6 +105,7 @@ export const homework = [
     estimatedTime: '15 phút',
     instruction: 'Ghi âm bài nói 2 phút giới thiệu một đồ vật yêu thích. Nói rõ lý do em chọn đồ vật đó.',
     attachments: ['Show and Tell Checklist.pdf', 'Speaking Example.mp4'],
+    assignmentFile: homeworkDocuments.canvaVideo,
     rubric: [{ label: 'Phát âm', points: 3 }, { label: 'Nội dung', points: 4 }, { label: 'Tự tin', points: 3 }],
     feedback: 'Chưa có feedback. Em có thể nộp file audio hoặc video.',
   },
@@ -78,6 +122,7 @@ export const homework = [
     estimatedTime: '30 phút',
     instruction: 'Hoàn thành 25 câu chuyển động từ sang thì quá khứ đơn và viết 5 câu ví dụ của riêng em.',
     attachments: ['Past Simple Drill.pdf'],
+    assignmentFile: homeworkDocuments.paintPdf,
     rubric: [{ label: 'Đáp án đúng', points: 7 }, { label: 'Câu ví dụ', points: 3 }],
     feedback: 'Bài đã nộp, đang chờ giáo viên chấm.',
   },
@@ -94,6 +139,7 @@ export const homework = [
     estimatedTime: '40 phút',
     instruction: 'Đọc passage ngắn và trả lời 12 câu hỏi skimming trong tối đa 15 phút.',
     attachments: ['Reading Passage.pdf', 'Question Sheet.pdf'],
+    assignmentFile: homeworkDocuments.paintDocx,
     rubric: [{ label: 'Tốc độ', points: 3 }, { label: 'Độ chính xác', points: 5 }, { label: 'Ghi chú keyword', points: 2 }],
     feedback: 'Bài đang làm, chưa có nhận xét.',
   },
@@ -110,6 +156,7 @@ export const homework = [
     estimatedTime: '20 phút',
     instruction: 'Ôn 20 từ Unit 6, đặt câu với 8 từ bất kỳ và hoàn thành bảng word family.',
     attachments: ['Unit 6 Vocabulary.pdf'],
+    assignmentFile: homeworkDocuments.paintPdf,
     rubric: [{ label: 'Đặt câu', points: 5 }, { label: 'Word family', points: 3 }, { label: 'Chính tả', points: 2 }],
     feedback: 'Từ vựng tốt, câu ví dụ tự nhiên. Cần chú ý spelling của “adventure”.',
   },
@@ -126,6 +173,7 @@ export const homework = [
     estimatedTime: '18 phút',
     instruction: 'Ghi âm 15 động từ có đuôi -ed theo 3 nhóm âm /t/, /d/, /id/.',
     attachments: ['Pronunciation Drill.mp3', 'Verb List.pdf'],
+    assignmentFile: homeworkDocuments.canvaVideo,
     rubric: [{ label: 'Âm cuối', points: 5 }, { label: 'Nhịp đọc', points: 3 }, { label: 'Rõ ràng', points: 2 }],
     feedback: 'Phân biệt /t/ và /id/ tốt. Luyện thêm nhóm /d/ để âm cuối rõ hơn.',
   },
@@ -142,6 +190,7 @@ export const homework = [
     estimatedTime: '25 phút',
     instruction: 'Nghe đoạn mô tả bản đồ và điền 8 vị trí. Ghi lại các cụm chỉ phương hướng.',
     attachments: ['Map Labelling Audio.mp3', 'Map Worksheet.pdf'],
+    assignmentFile: homeworkDocuments.paintPdf,
     rubric: [{ label: 'Vị trí đúng', points: 6 }, { label: 'Direction phrases', points: 4 }],
     feedback: 'Bài đã quá hạn. Em vẫn có thể nộp để giáo viên hỗ trợ nhận xét.',
   },
@@ -158,6 +207,7 @@ export const homework = [
     estimatedTime: '50 phút',
     instruction: 'Làm slide 4 trang giới thiệu nghề nghiệp mơ ước, kỹ năng cần có và kế hoạch học tập.',
     attachments: ['Project Template.pptx', 'Dream Jobs Vocabulary.pdf'],
+    assignmentFile: homeworkDocuments.fallingApples,
     rubric: [{ label: 'Ý tưởng', points: 4 }, { label: 'Ngôn ngữ', points: 3 }, { label: 'Thiết kế', points: 2 }, { label: 'Đúng hạn', points: 1 }],
     feedback: 'Bài đã nộp, đang chờ giáo viên chấm.',
   },
