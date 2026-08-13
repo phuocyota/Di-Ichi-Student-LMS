@@ -1,4 +1,4 @@
-import { FileText, MessageCircle, Paperclip, UserRound } from 'lucide-react';
+import { Download, Eye, FileText, MessageCircle, Paperclip, UserRound } from 'lucide-react';
 import Card from '../common/Card.jsx';
 import SectionTitle from '../common/SectionTitle.jsx';
 import SubmissionPanel from './SubmissionPanel.jsx';
@@ -42,18 +42,10 @@ function HomeworkDetailPanel({ homework, files, onAddFiles, onRemoveFile }) {
           </div>
         </div>
 
-        <div className="mt-5">
-          <p className="text-sm font-black uppercase text-slate-400">Tài liệu</p>
-          <div className="mt-3 space-y-2">
-            {homework.attachments.map((attachment) => (
-              <div key={attachment} className="flex items-center gap-3 rounded-3xl bg-white p-3 shadow-sm ring-1 ring-orange-100">
-                <Paperclip className="h-4 w-4 shrink-0 text-[#F97316]" />
-                <span className="min-w-0 truncate font-bold text-slate-600">{attachment}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        
       </Card>
+
+      <HomeworkFilePreview homework={homework} />
 
       <SubmissionPanel homework={homework} files={files} onAddFiles={onAddFiles} onRemoveFile={onRemoveFile} />
 
@@ -72,6 +64,51 @@ function HomeworkDetailPanel({ homework, files, onAddFiles, onRemoveFile }) {
           <p className="mt-4 font-semibold leading-7 text-slate-600">{homework.feedback}</p>
         </div>
       </Card>
+    </div>
+  );
+}
+
+function HomeworkFilePreview({ homework }) {
+  const assignmentFile = homework.assignmentFile;
+
+  if (!assignmentFile) {
+    return null;
+  }
+
+  return (
+    <Card>
+      <h3 className="text-xl font-black text-slate-950">Tài liệu đính kèm</h3>
+      <div className="mt-4">
+        <AttachmentFileCard file={assignmentFile} />
+      </div>
+    </Card>
+  );
+}
+
+function AttachmentFileCard({ file }) {
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-orange-100">
+      <div className="flex items-start gap-3">
+        <div className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-orange-50 text-[#F97316]">
+          <FileText className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <h4 className="min-w-0 text-lg font-black leading-7 text-slate-950">{file.title}</h4>
+            <span className="shrink-0 rounded-2xl bg-slate-50 px-3 py-1 text-sm font-black text-slate-500 ring-1 ring-slate-200">{file.format}</span>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a href={file.previewUrl} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white px-4 font-black text-[#B45309] ring-1 ring-orange-100">
+              <Eye className="h-4 w-4" />
+              Xem trước
+            </a>
+            <a href={file.downloadUrl} download={file.fileName} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#F97316] px-4 font-black text-white shadow-md shadow-orange-200">
+              <Download className="h-4 w-4" />
+              Tải về
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
