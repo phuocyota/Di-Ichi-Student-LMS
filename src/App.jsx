@@ -1,4 +1,4 @@
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from './components/layout/Header.jsx';
 import BottomNavigation from './components/layout/BottomNavigation.jsx';
@@ -12,9 +12,28 @@ import MaterialsPage from './pages/MaterialsPage.jsx';
 import ProgressPage from './pages/ProgressPage.jsx';
 import CertificatesPage from './pages/CertificatesPage.jsx';
 import AchievementsPage from './pages/AchievementsPage.jsx';
+import ClassroomPage from './pages/ClassroomPage.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import { getAccessToken } from './auth/authStorage.js';
 
 function App() {
   const location = useLocation();
+
+  if (location.pathname === '/login') {
+    return <LoginPage />;
+  }
+
+  if (!getAccessToken()) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (location.pathname.startsWith('/online/')) {
+    return (
+      <Routes>
+        <Route path="/online/:scheduleId" element={<ClassroomPage />} />
+      </Routes>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-24 text-slate-800">

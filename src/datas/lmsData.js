@@ -22,7 +22,7 @@ export const menuItems = [
   { path: '/lessons', label: 'Học bài', icon: 'CirclePlay', color: 'from-green-400 to-emerald-600' },
   { path: '/homework', label: 'Homework', icon: 'FileText', color: 'from-amber-400 to-orange-500' },
   { path: '/quiz', label: 'Quiz', icon: 'BadgeCheck', color: 'from-sky-400 to-blue-600' },
-  // { path: '/online', label: 'Lớp học Online', icon: 'Laptop', color: 'from-violet-400 to-indigo-600' },
+  { path: '/online', label: 'Lớp học Online', icon: 'Laptop', color: 'from-violet-400 to-indigo-600' },
   { path: '/materials', label: 'Tài liệu', icon: 'GraduationCap', color: 'from-rose-400 to-pink-600' },
   { path: '/progress', label: 'Tiến độ', icon: 'Target', color: 'from-teal-400 to-cyan-600' },
   { path: '/certificates', label: 'Chứng chỉ', icon: 'Award', color: 'from-yellow-400 to-amber-500' },
