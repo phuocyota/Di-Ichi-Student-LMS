@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "test": "vitest run --environment jsdom",
     "preview": "vite preview --host 0.0.0.0",
     "deploy": "sh deploy.sh"
   },
@@ -25,6 +26,10 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "latest",
-    "tailwindcss": "latest"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "latest",
+    "vitest": "^3.2.7"
   }
 }

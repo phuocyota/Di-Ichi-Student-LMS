@@ -26,7 +26,7 @@ function ClassroomPage() {
       <div className="mx-auto max-w-xl rounded-3xl bg-white p-8 text-center shadow-xl shadow-orange-100">
         <h1 className="text-2xl font-black text-slate-900">Không thể vào lớp</h1>
         <p className="mt-3 font-semibold text-red-600">{error}</p>
-        <button onClick={() => navigate('/online')} className="mt-6 rounded-2xl bg-[#F97316] px-5 py-3 font-black text-white">Quay lại lịch học</button>
+        <button onClick={() => navigate('/online', { replace: true })} className="mt-6 rounded-2xl bg-[#F97316] px-5 py-3 font-black text-white">Quay lại trạng thái chờ</button>
       </div>
     );
   }

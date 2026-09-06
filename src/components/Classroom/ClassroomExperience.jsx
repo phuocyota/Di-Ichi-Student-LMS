@@ -6,6 +6,7 @@ import {
   RoomAudioRenderer,
   StartAudio,
   useRoomContext,
+  useParticipants,
   useTracks,
 } from '@livekit/components-react';
 import { Hand } from 'lucide-react';
@@ -18,11 +19,12 @@ function ClassroomExperience({ joinData, onLeave, onDeviceError }) {
   const [permissions, setPermissions] = useState(joinData.permissions);
   const [handRaised, setHandRaised] = useState(false);
   const onPermissionChanged = useCallback((next) => setPermissions(next), []);
-  const socket = useClassroomSocket({
+  const { socket, connected } = useClassroomSocket({
     scheduleId: joinData.scheduleId,
     identity: joinData.identity,
     onPermissionChanged,
   });
+  const participants = useParticipants();
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -52,6 +54,7 @@ function ClassroomExperience({ joinData, onLeave, onDeviceError }) {
         <div>
           <p className="text-xs font-black uppercase text-orange-400">Lớp học trực tuyến</p>
           <h1 className="text-xl font-black">{joinData.displayName}</h1>
+          <p className="text-xs font-semibold text-slate-400">{participants.length} người tham gia · Realtime {connected ? 'đã kết nối' : 'đang kết nối lại'}</p>
         </div>
         <button type="button" onClick={onLeave} className="rounded-2xl bg-red-500 px-4 py-2 font-black">Rời lớp</button>
       </header>
