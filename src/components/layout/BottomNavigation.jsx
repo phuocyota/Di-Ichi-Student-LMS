@@ -1,5 +1,12 @@
+import React from 'react'
 import { NavLink } from 'react-router-dom';
-import { bottomNav } from '../../datas/lmsData.js';
+const bottomNav = [
+  { path: '/', label: 'Home', icon: 'Home' },
+  { path: '/courses', label: 'Khóa học', icon: 'BookOpen' },
+  { path: '/lessons', label: 'Học bài', icon: 'Play' },
+  { path: '/homework', label: 'Bài tập', icon: 'FileText' },
+  { path: '/achievements', label: 'Thành tích', icon: 'Trophy' },
+];
 import { iconMap } from '../icons/iconMap.jsx';
 
 function BottomNavigation() {

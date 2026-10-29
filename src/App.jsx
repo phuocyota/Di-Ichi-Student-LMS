@@ -1,3 +1,4 @@
+import React from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from './components/layout/Header.jsx';
@@ -14,7 +15,9 @@ import CertificatesPage from './pages/CertificatesPage.jsx';
 import AchievementsPage from './pages/AchievementsPage.jsx';
 import ClassroomPage from './pages/ClassroomPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
 import { getAccessToken } from './auth/authStorage.js';
+import { PortalProvider } from './portal/PortalContext.jsx';
 
 function App() {
   const location = useLocation();
@@ -36,7 +39,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen pb-24 text-slate-800">
+    <PortalProvider><div className="min-h-screen pb-24 text-slate-800">
       <Header />
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-5 sm:px-6 lg:px-8">
         <motion.div
@@ -59,11 +62,12 @@ function App() {
             <Route path="/progress" element={<ProgressPage />} />
             <Route path="/certificates" element={<CertificatesPage />} />
             <Route path="/achievements" element={<AchievementsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </motion.div>
       </main>
       <BottomNavigation />
-    </div>
+    </div></PortalProvider>
   );
 }
 

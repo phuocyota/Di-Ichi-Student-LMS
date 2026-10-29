@@ -23,6 +23,7 @@ function LoginPage() {
       if (result.userType !== 'STUDENT') {
         throw new Error('Tài khoản này không phải tài khoản học sinh');
       }
+      if (!result.accessToken) throw new Error('Máy chủ chưa trả access token');
       setAccessToken(result.accessToken);
       navigate(location.state?.from || '/', { replace: true });
     } catch (requestError) {
