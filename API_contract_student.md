@@ -30,4 +30,6 @@ Ki?m tra: npm test -- --configLoader runner; npm run build.
 - `POST /auth/student/change-password`, Bearer token, body `{currentPassword, newPassword}`.
 - Mật khẩu mới tối thiểu 8 ký tự, tối đa 72 byte; cần nhập xác nhận trên giao diện.
 - Học viên mới đăng nhập bằng email và mật khẩu ban đầu `123456`.
+- Sai mật khẩu hiện tại trả `400` và giữ phiên đăng nhập; `401` yêu cầu đăng nhập lại.
+- Sau khi đổi mật khẩu thành công, token cũ hết hiệu lực và giao diện chuyển về trang đăng nhập để dùng mật khẩu mới.
 

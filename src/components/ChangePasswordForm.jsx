@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { apiRequest } from "../services/apiClient.js";
+import { useNavigate } from "react-router-dom";
+import { clearAccessToken } from "../auth/authStorage.js";
 
 export default function ChangePasswordForm() {
+  const navigate = useNavigate();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,12 +36,13 @@ export default function ChangePasswordForm() {
       await apiRequest("/auth/student/change-password", {
         method: "POST",
         body: JSON.stringify({ currentPassword, newPassword }),
-        keepSessionOn401: true,
       });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setSuccess(true);
+      clearAccessToken("passwordChanged");
+      navigate("/login", { replace: true, state: { passwordChanged: true } });
     } catch (cause) {
       setError(cause.message);
     } finally {
