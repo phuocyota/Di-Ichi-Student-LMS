@@ -1,4 +1,5 @@
 import React, { useSyncExternalStore } from "react";
+import LessonLibrary from './library/LessonLibrary.jsx';
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import Header from "./components/layout/Header.jsx";
@@ -6,6 +7,7 @@ import BottomNavigation from "./components/layout/BottomNavigation.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import CoursesPage from "./pages/CoursesPage.jsx";
 import LessonsPage from "./pages/LessonsPage.jsx";
+import ElearningLesson from './elearning/ElearningLessons.jsx';
 import HomeworkPage from "./pages/HomeworkPage.jsx";
 import QuizPage from "./pages/QuizPage.jsx";
 import OnlinePage from "./pages/OnlinePage.jsx";
@@ -55,6 +57,8 @@ function App() {
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/courses/:courseId" element={<CoursesPage />} />
               <Route path="/lessons" element={<LessonsPage />} />
+              <Route path="/elearning/:courseId" element={<ElearningLesson />} />
+              <Route path="/lesson-library" element={<LessonLibrary />} />
               <Route path="/homework" element={<HomeworkPage />} />
               <Route path="/quiz" element={<QuizPage />} />
               <Route path="/quiz/:quizId" element={<QuizPage />} />

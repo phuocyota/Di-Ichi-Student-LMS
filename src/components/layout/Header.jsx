@@ -18,6 +18,7 @@ export default function Header() {
           </div>
         </NavLink>
         <div className="flex flex-wrap items-center gap-4">
+          <NavLink to="/lesson-library">Thư viện bài giảng</NavLink>
           <NavLink to="/">
             Thông báo ({data.notifications.filter((n) => !n.readAt).length})
           </NavLink>
