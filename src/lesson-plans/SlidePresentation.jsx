@@ -4,7 +4,7 @@ import { LessonScene } from "./LessonAppearance.jsx";
 import BlockPlayer from "./BlockPlayer.jsx";
 import "./slide-presentation.css";
 
-export default function SlidePresentation({ plan, onClose, startIndex = 0 }) {
+export default function SlidePresentation({ plan, onClose, onAnswer, startIndex = 0 }) {
   const canvasMode = Boolean(plan.pages?.length);
   const slides = canvasMode ? plan.pages : plan.blocks;
   const [index, setIndex] = useState(
@@ -169,7 +169,7 @@ export default function SlidePresentation({ plan, onClose, startIndex = 0 }) {
                     }}
                   >
                     {(b.type !== "video" || b.pageId === slides[active].id) && (
-                      <BlockPlayer block={b} />
+                      <BlockPlayer block={b} onAnswer={onAnswer} />
                     )}
                   </article>
                 ))}
@@ -189,7 +189,7 @@ export default function SlidePresentation({ plan, onClose, startIndex = 0 }) {
                 className="lp-slide-content lp-slide-single lp-animated-block"
               >
                 {(b.type !== "video" || i === active) && (
-                  <BlockPlayer block={b} />
+                  <BlockPlayer block={b} onAnswer={onAnswer} />
                 )}
               </article>
             ))}
@@ -208,6 +208,7 @@ export default function SlidePresentation({ plan, onClose, startIndex = 0 }) {
             {slides.length ? `Slide ${active + 1}/${slides.length}` : "0 slide"}
           </strong>
           <span>{slides[active]?.title || ""}</span>
+          {plan.progress && <span>Đã làm {plan.progress.answered}/{plan.progress.total} câu · Đúng {plan.progress.correct} · Sai {plan.progress.incorrect}</span>}
         </div>
         <button
           disabled={active >= slides.length - 1 || !slides.length}

@@ -9,6 +9,12 @@ export function getClassLessonPlan(id, signal) {
   return apiRequest(`/portal/class-lesson-plans/${encodeURIComponent(id)}`, { signal });
 }
 
+export function submitLessonAnswer(id, body) {
+  return apiRequest(`/portal/class-lesson-plans/${encodeURIComponent(id)}/answers`, {
+    method: 'POST', body: JSON.stringify(body),
+  });
+}
+
 export async function downloadPortalImage(id, signal) {
   const response = await fetch(`${getApiUrl()}/portal/files/${encodeURIComponent(id)}`, {
     signal,

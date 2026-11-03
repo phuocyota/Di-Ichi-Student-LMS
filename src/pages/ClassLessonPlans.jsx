@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getClassLessonPlan, getClassLessonPlans } from '../services/lessonPlanApi.js';
+import { getClassLessonPlan, getClassLessonPlans, submitLessonAnswer } from '../services/lessonPlanApi.js';
 import PageShell from '../components/common/PageShell.jsx';
 import SlidePresentation from '../lesson-plans/SlidePresentation.jsx';
 import '../lesson-plans/lesson-planner.css';
@@ -51,6 +51,14 @@ export default function ClassLessonPlanPage() {
   const navigate = useNavigate();
   const [plan, setPlan] = useState(null);
   const [error, setError] = useState('');
+  const queue = useRef(Promise.resolve());
+  const onAnswer = (blockId, values) => {
+    const request = queue.current.catch(() => {}).then(() => submitLessonAnswer(plan.id, { revision: plan.revision, blockId, values }));
+    queue.current = request;
+    return request.then((progress) => {
+      setPlan((current) => current?.id === plan.id && current.revision === plan.revision ? { ...current, progress } : current);
+    });
+  };
   useEffect(() => {
     const controller = new AbortController();
     setPlan(null);
@@ -67,7 +75,7 @@ export default function ClassLessonPlanPage() {
     <PageShell title={plan?.title || 'Giáo án của lớp'} subtitle="Xem nội dung và thực hành các hoạt động giáo viên đã chia sẻ.">
       <Link to="/lessons">← Về danh sách bài học</Link>
       {error ? <p role="alert">{error}</p> : !plan ? <p role="status">Đang tải giáo án…</p> : (
-        <SlidePresentation key={plan.id} plan={plan} onClose={() => navigate("/lessons")} />
+        <SlidePresentation key={plan.id} plan={plan} onAnswer={onAnswer} onClose={() => navigate("/lessons")} />
       )}
     </PageShell>
   );

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { BLOCKS, mediaUrl, youtubeEmbed } from "./blocks.js";
 import ActivityGame, { ActivityPrint } from "./ActivityGames.jsx";
 
-function Quiz({ block: b }) {
+function Quiz({ block: b, onAnswer }) {
   const [chosen, setChosen] = useState(null),
     [checked, setChecked] = useState(false);
   const valid =
@@ -47,7 +47,7 @@ function Quiz({ block: b }) {
           <div className="lp-game-actions">
             <button
               disabled={chosen === null || checked}
-              onClick={() => setChecked(true)}
+              onClick={() => { setChecked(true); onAnswer?.([chosen]); }}
             >
               Kiểm tra đáp án
             </button>
@@ -75,7 +75,7 @@ function Quiz({ block: b }) {
     </div>
   );
 }
-function Matching({ block: b }) {
+function Matching({ block: b, onAnswer }) {
   const [selected, setSelected] = useState(null),
     [matches, setMatches] = useState({}),
     [checked, setChecked] = useState(false);
@@ -176,7 +176,7 @@ function Matching({ block: b }) {
               disabled={
                 Object.keys(matches).length !== b.pairs.length || checked
               }
-              onClick={() => setChecked(true)}
+              onClick={() => { setChecked(true); onAnswer?.(b.pairs.map((_, i) => matches[i])); }}
             >
               Kiểm tra ghép cặp
             </button>
@@ -203,7 +203,7 @@ function Matching({ block: b }) {
     </div>
   );
 }
-function Ordering({ block: b }) {
+function Ordering({ block: b, onAnswer }) {
   const [order, setOrder] = useState(() =>
       b.sequence.map((_, i) => i).reverse(),
     ),
@@ -285,7 +285,7 @@ function Ordering({ block: b }) {
             ))}
           </ol>
           <div className="lp-game-actions">
-            <button disabled={checked} onClick={() => setChecked(true)}>
+            <button disabled={checked} onClick={() => { setChecked(true); onAnswer?.(order); }}>
               Kiểm tra thứ tự
             </button>
             <button
@@ -309,11 +309,26 @@ function Ordering({ block: b }) {
     </div>
   );
 }
-export default function BlockPlayer({ block: b, print = false }) {
+export default function BlockPlayer({ block: b, print = false, onAnswer }) {
+  const [submission, setSubmission] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const submit = async (values) => {
+    if (!onAnswer) return;
+    setSubmission(values);
+    setSaving(true);
+    setSaveError('');
+    try { await onAnswer(b.id, values); }
+    catch (error) { setSaveError(error.message); }
+    finally { setSaving(false); }
+  };
   const url = mediaUrl(b.url),
     embed = youtubeEmbed(b.url);
   return (
     <article className={"lp-play-block lp-play-" + b.type}>
+      {saving && <p role="status">Đang lưu kết quả…</p>}
+      {saveError && <p role="alert">Chưa lưu được kết quả: {saveError} <button disabled={saving} onClick={() => submit(submission)}>Thử lưu lại</button></p>}
+      <div inert={saving || undefined}>
       <div className="lp-play-caption">
         <span>{BLOCKS[b.type]?.label}</span>
         {b.minutes > 0 && <span>{b.minutes} phút</span>}
@@ -388,14 +403,15 @@ export default function BlockPlayer({ block: b, print = false }) {
               : [...b.sequence].reverse().map((s, i) => <p key={i}>☐ {s}</p>)}
         </div>
       ) : b.type === "quiz" ? (
-        <Quiz block={b} />
+        <Quiz block={b} onAnswer={submit} />
       ) : b.type === "matching" ? (
-        <Matching block={b} />
+        <Matching block={b} onAnswer={submit} />
       ) : b.type === "ordering" ? (
-        <Ordering block={b} />
+        <Ordering block={b} onAnswer={submit} />
       ) : (
-        <ActivityGame block={b} />
+        <ActivityGame block={b} onAnswer={submit} />
       )}
+      </div>
     </article>
   );
 }

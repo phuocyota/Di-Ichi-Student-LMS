@@ -183,7 +183,7 @@ export function RandomWheel({ block: b }) {
   );
 }
 
-export function GroupSort({ block: b }) {
+export function GroupSort({ block: b, onAnswer }) {
   const groups = [...new Set(b.pairs.map((p) => p.right.trim()))];
   const [selected, setSelected] = useState(null),
     [assignments, setAssignments] = useState({}),
@@ -286,7 +286,7 @@ export function GroupSort({ block: b }) {
               disabled={
                 checked || Object.keys(assignments).length !== b.pairs.length
               }
-              onClick={() => setChecked(true)}
+              onClick={() => { setChecked(true); onAnswer?.(b.pairs.map((_, i) => groups.indexOf(assignments[i]))); }}
             >
               Kiểm tra phân nhóm
             </button>
@@ -477,9 +477,9 @@ export function MemoryPairs({ block: b }) {
   );
 }
 
-export default function ActivityGame({ block }) {
+export default function ActivityGame({ block, onAnswer }) {
   if (block.type === "wheel") return <RandomWheel block={block} />;
-  if (block.type === "group-sort") return <GroupSort block={block} />;
+  if (block.type === "group-sort") return <GroupSort block={block} onAnswer={onAnswer} />;
   if (block.type === "open-box") return <OpenBox block={block} />;
   if (block.type === "memory") return <MemoryPairs block={block} />;
   return null;
