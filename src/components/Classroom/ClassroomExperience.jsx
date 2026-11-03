@@ -39,13 +39,14 @@ function ClassroomExperience({ joinData, onLeave, onDeviceError }) {
     if (!permissions.canShareScreen) void room.localParticipant.setScreenShareEnabled(false);
   }, [permissions, room]);
 
+  useEffect(() => {
+    if (!socket || !connected) return;
+    const replay = event => { if (!event || event.role === 'teacher') socket.emit('classroom:raise-hand', { scheduleId: joinData.scheduleId, raised: handRaised }); };
+    replay(); socket.on('classroom:participant-joined', replay);
+    return () => socket.off('classroom:participant-joined', replay);
+  }, [socket, connected, handRaised, joinData.scheduleId]);
   function toggleHand() {
-    const raised = !handRaised;
-    setHandRaised(raised);
-    socket?.emit('classroom:raise-hand', {
-      scheduleId: joinData.scheduleId,
-      raised,
-    });
+    if (connected) setHandRaised(raised => !raised);
   }
 
   return (

@@ -11,7 +11,7 @@ function ClassroomBoard({ socket, scheduleId, permissions }) {
     if (!socket) return undefined;
     const receiveStroke = (event) => {
       if (event.scheduleId === scheduleId && event.data?.id) {
-        setStrokes((current) => [...current, event.data]);
+        setStrokes((current) => [...current.filter(item => item.id !== event.data.id), event.data]);
       }
     };
     const clearBoard = (event) => {
@@ -31,7 +31,7 @@ function ClassroomBoard({ socket, scheduleId, permissions }) {
     socket.on('board:clear', clearBoard);
     socket.on('board:snapshot-request', sendSnapshot);
     socket.on('board:snapshot', receiveSnapshot);
-    socket.emit('board:snapshot-request', { scheduleId });
+    if (socket.classroomReady) socket.emit('board:snapshot-request', { scheduleId });
     return () => {
       socket.off('board:draw', receiveStroke);
       socket.off('board:clear', clearBoard);
@@ -49,7 +49,7 @@ function ClassroomBoard({ socket, scheduleId, permissions }) {
   }
 
   function startDrawing(event) {
-    if (!permissions.canWriteBoard) return;
+    if (!permissions.canWriteBoard || !socket?.connected || !socket.classroomReady) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     setDrawing({
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -60,13 +60,15 @@ function ClassroomBoard({ socket, scheduleId, permissions }) {
   }
 
   function continueDrawing(event) {
-    if (!drawing) return;
+    if (!drawing) return
+    if (!socket?.connected || !socket.classroomReady) { setDrawing(null); return };
     const next = { ...drawing, points: [...drawing.points, pointFromEvent(event)] };
     setDrawing(next);
   }
 
   function finishDrawing() {
-    if (!drawing) return;
+    if (!drawing) return
+    if (!socket?.connected || !socket.classroomReady) { setDrawing(null); return };
     if (drawing.points.length > 1) {
       setStrokes((current) => [...current, drawing]);
       socket?.emit('board:draw', { scheduleId, data: drawing });
@@ -76,6 +78,7 @@ function ClassroomBoard({ socket, scheduleId, permissions }) {
 
   function clearBoard() {
     if (!permissions.canControlBoard) return;
+    if (!socket?.connected || !socket.classroomReady) return;
     setStrokes([]);
     socket?.emit('board:clear', { scheduleId });
   }

@@ -1,3 +1,4 @@
+import { useResourceUpdates } from '../services/realtime.js';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getClassLessonPlan, getClassLessonPlans, submitLessonAnswer } from '../services/lessonPlanApi.js';
@@ -10,6 +11,7 @@ export function ClassLessonPlanList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reload, setReload] = useState(0);
+  useResourceUpdates(() => setReload(v => v + 1), ['portal','class','class-staff','enrollment']);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);

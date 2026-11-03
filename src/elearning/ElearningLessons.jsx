@@ -1,3 +1,4 @@
+import { useResourceUpdates } from '../services/realtime.js';
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { portalRequest } from "../services/portalApi.js";
@@ -10,6 +11,7 @@ export function ElearningList() {
   const [items, setItems] = useState(null),
     [error, setError] = useState(""),
     [retry, setRetry] = useState(0);
+  useResourceUpdates(() => setRetry(v => v + 1), ['portal','class-staff','enrollment']);
   useEffect(() => {
     const c = new AbortController();
     setError("");

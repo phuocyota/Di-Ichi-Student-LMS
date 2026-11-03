@@ -1,3 +1,4 @@
+import { useUpdatesConnection, useResourceUpdates } from '../services/realtime.js';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   getAccessToken,
@@ -46,6 +47,7 @@ async function portalRequest(
   return payload?.data ?? payload;
 }
 export function PortalProvider({ children }) {
+  useUpdatesConnection();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -70,6 +72,7 @@ export function PortalProvider({ children }) {
     reload(controller.signal).catch(() => {});
     return () => controller.abort();
   }, [reload]);
+  useResourceUpdates(() => reload().catch(() => {}), ['portal', 'workspace', 'class', 'class-staff', 'class-room', 'class-weekly-schedule', 'course', 'enrollment', 'schedule', 'attendance-record', 'homework', 'homework-submission', 'score', 'notification', 'document', 'class-document', 'student-certificate', 'student', 'staff', 'finance-transaction', 'payment', 'debt-schedule']);
   const act = async (path, options = {}) => {
     if (lock.current) return null;
     lock.current = true;

@@ -1,3 +1,4 @@
+import { useResourceUpdates } from '../../services/realtime.js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import OnlineClassCard from './OnlineClassCard.jsx';
 import { getOnlineSchedules } from '../../services/classroomApi.js';
@@ -21,6 +22,7 @@ function OnlineClassGrid() {
     }
   }, []);
 
+  useResourceUpdates(() => load({ silent: true }), ['schedule','class','class-staff','enrollment','workspace','portal']);
   useEffect(() => {
     void load();
     const timer = window.setInterval(() => load({ silent: true }), 15000);
