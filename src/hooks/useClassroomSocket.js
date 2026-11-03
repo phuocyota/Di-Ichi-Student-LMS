@@ -43,6 +43,7 @@ export function useClassroomSocket({
         setConnected(false);
       } else if (client.connected) join();
     });
+    client.on('classroom:ended', event => { if (event?.scheduleId === scheduleId && active) { client.classroomReady = false; setConnected(false); } });
     client.on("disconnect", () => {
       client.classroomReady = false;
       if (active) setConnected(false);

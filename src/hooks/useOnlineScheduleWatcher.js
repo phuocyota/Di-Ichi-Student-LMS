@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createRealtimeSocket } from "../services/realtime.js";
-export function useOnlineScheduleWatcher(scheduleIds, onStarted) {
+export function useOnlineScheduleWatcher(scheduleIds, onStarted, onEnded) {
   const [connected, setConnected] = useState(false);
   const latest = useRef(onStarted);
   useEffect(() => {
     latest.current = onStarted;
   });
+  const ended = useRef(onEnded);
+  useEffect(() => { ended.current = onEnded; });
   const scheduleKey = [...new Set(scheduleIds)].sort().join(",");
   useEffect(() => {
     if (!scheduleKey) return;
@@ -30,6 +32,7 @@ export function useOnlineScheduleWatcher(scheduleIds, onStarted) {
     client.on("classroom:started", (event) => {
       if (ids.includes(event?.scheduleId)) latest.current?.(event);
     });
+    client.on('classroom:ended', event => { if (ids.includes(event?.scheduleId)) ended.current?.(event); });
     return () => {
       active = false;
       client.disconnect();

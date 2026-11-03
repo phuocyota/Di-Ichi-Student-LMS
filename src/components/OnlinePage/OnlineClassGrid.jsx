@@ -40,7 +40,8 @@ function OnlineClassGrid() {
       ? { ...item, meetingStarted: true, canJoin: true, joinReason: null }
       : item));
   }, []);
-  useOnlineScheduleWatcher(scheduleIds, onStarted);
+  const onEnded = useCallback(() => { void load({ silent: true }); }, [load]);
+  useOnlineScheduleWatcher(scheduleIds, onStarted, onEnded);
 
   if (loading) return <p className="rounded-3xl bg-white p-8 text-center text-lg font-black text-slate-500">Đang tải lịch học...</p>;
   if (error) return <p className="rounded-3xl bg-red-50 p-6 font-bold text-red-600">{error}</p>;
