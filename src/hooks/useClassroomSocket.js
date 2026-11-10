@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { createRealtimeSocket } from "../services/realtime.js";
+import { disposeRealtimeSocket } from "../services/socketSession.js";
+import { subscribeSocket } from "../services/socketSubscription.js";
 export function useClassroomSocket({
   scheduleId,
   identity,
@@ -13,55 +15,38 @@ export function useClassroomSocket({
   });
   useEffect(() => {
     if (!scheduleId) return;
-    let active = true;
     const client = createRealtimeSocket("classroom");
     setSocket(client);
-    const join = () => {
+    const unavailable = () => {
       client.classroomReady = false;
-      client
-        .timeout(5000)
-        .emit("classroom:join", { scheduleId }, (error, response) => {
-          if (!active) return;
-          const result = response?.data ?? response;
-          const ready =
-            !error &&
-            result?.scheduleId === scheduleId &&
-            result.realtimeReady !== false;
-          client.classroomReady = ready;
-          setConnected(ready);
-          if (ready) {
-            if (result.permissions) latest.current?.(result.permissions);
-            client.emit("board:snapshot-request", { scheduleId });
-          }
-        });
+      setConnected(false);
     };
-    client.on("connect", join);
-    client.on("classroom:transport-status", (event) => {
-      if (!active) return;
-      if (!event?.ready) {
-        client.classroomReady = false;
-        setConnected(false);
-      } else if (client.connected) join();
+    const stop = subscribeSocket(client, {
+      event: "classroom:join",
+      payload: { scheduleId },
+      statusEvent: "classroom:transport-status",
+      accept: (result) => result?.scheduleId === scheduleId,
+      onUnavailable: unavailable,
+      onReady: (result) => {
+        client.classroomReady = true;
+        setConnected(true);
+        if (result.permissions) latest.current?.(result.permissions);
+        client.emit("board:snapshot-request", { scheduleId });
+      },
     });
-    client.on('classroom:ended', event => { if (event?.scheduleId === scheduleId && active) { client.classroomReady = false; setConnected(false); } });
-    client.on("disconnect", () => {
-      client.classroomReady = false;
-      if (active) setConnected(false);
-    });
-    client.on("connect_error", () => {
-      if (active) setConnected(false);
-    });
-    client.on("exception", () => {
-      client.classroomReady = false;
-      if (active) setConnected(false);
+    client.on("classroom:ended", (event) => {
+      if (event?.scheduleId === scheduleId) {
+        stop();
+        unavailable();
+      }
     });
     client.on("classroom:permission-changed", (event) => {
       if (event?.scheduleId === scheduleId && event.identity === identity)
         latest.current?.(event.permissions);
     });
     return () => {
-      active = false;
-      client.disconnect();
+      stop();
+      disposeRealtimeSocket(client);
       setSocket(null);
       setConnected(false);
     };

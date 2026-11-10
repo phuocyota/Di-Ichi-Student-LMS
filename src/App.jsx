@@ -36,14 +36,14 @@ function App() {
 
   if (location.pathname.startsWith("/online/")) {
     return (
-      <Routes>
+      <Routes key={accessToken}>
         <Route path="/online/:scheduleId" element={<ClassroomPage />} />
       </Routes>
     );
   }
 
   return (
-    <PortalProvider>
+    <PortalProvider key={accessToken}>
       <div className="min-h-screen pb-24 text-slate-800">
         <Header />
         <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-5 sm:px-6 lg:px-8">
