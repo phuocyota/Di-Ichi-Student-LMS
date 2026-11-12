@@ -179,7 +179,15 @@ export default function SlidePresentation({
                     }}
                   >
                     {(b.type !== "video" || b.pageId === slides[active].id) && (
-                      <BlockPlayer block={b} onAnswer={onAnswer} />
+                      <BlockPlayer
+                        block={b}
+                        onAnswer={onAnswer}
+                        initialValues={
+                          plan.progress?.answers?.find(
+                            (answer) => answer.blockId === b.id,
+                          )?.values
+                        }
+                      />
                     )}
                   </article>
                 ))}
@@ -199,7 +207,15 @@ export default function SlidePresentation({
                 className="lp-slide-content lp-slide-single lp-animated-block"
               >
                 {(b.type !== "video" || i === active) && (
-                  <BlockPlayer block={b} onAnswer={onAnswer} />
+                  <BlockPlayer
+                    block={b}
+                    onAnswer={onAnswer}
+                    initialValues={
+                      plan.progress?.answers?.find(
+                        (answer) => answer.blockId === b.id,
+                      )?.values
+                    }
+                  />
                 )}
               </article>
             ))}

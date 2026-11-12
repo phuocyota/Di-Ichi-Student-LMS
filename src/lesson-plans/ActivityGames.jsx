@@ -183,11 +183,15 @@ export function RandomWheel({ block: b }) {
   );
 }
 
-export function GroupSort({ block: b, onAnswer }) {
+export function GroupSort({ block: b, onAnswer, initialValues }) {
   const groups = [...new Set(b.pairs.map((p) => p.right.trim()))];
   const [selected, setSelected] = useState(null),
-    [assignments, setAssignments] = useState({}),
-    [checked, setChecked] = useState(false);
+    [assignments, setAssignments] = useState(() =>
+      Object.fromEntries(
+        initialValues?.map((value, index) => [index, groups[value]]) || [],
+      ),
+    ),
+    [checked, setChecked] = useState(Boolean(initialValues));
   const valid =
     groups.length >= 2 &&
     b.pairs.length >= 2 &&
@@ -286,7 +290,12 @@ export function GroupSort({ block: b, onAnswer }) {
               disabled={
                 checked || Object.keys(assignments).length !== b.pairs.length
               }
-              onClick={() => { setChecked(true); onAnswer?.(b.pairs.map((_, i) => groups.indexOf(assignments[i]))); }}
+              onClick={() => {
+                setChecked(true);
+                onAnswer?.(
+                  b.pairs.map((_, i) => groups.indexOf(assignments[i])),
+                );
+              }}
             >
               Kiểm tra phân nhóm
             </button>
@@ -477,9 +486,16 @@ export function MemoryPairs({ block: b }) {
   );
 }
 
-export default function ActivityGame({ block, onAnswer }) {
+export default function ActivityGame({ block, onAnswer, initialValues }) {
   if (block.type === "wheel") return <RandomWheel block={block} />;
-  if (block.type === "group-sort") return <GroupSort block={block} onAnswer={onAnswer} />;
+  if (block.type === "group-sort")
+    return (
+      <GroupSort
+        block={block}
+        onAnswer={onAnswer}
+        initialValues={initialValues}
+      />
+    );
   if (block.type === "open-box") return <OpenBox block={block} />;
   if (block.type === "memory") return <MemoryPairs block={block} />;
   return null;

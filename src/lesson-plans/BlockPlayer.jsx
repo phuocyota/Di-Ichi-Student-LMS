@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { BLOCKS, mediaUrl, youtubeEmbed } from "./blocks.js";
 import ActivityGame, { ActivityPrint } from "./ActivityGames.jsx";
 
-function Quiz({ block: b, onAnswer }) {
-  const [chosen, setChosen] = useState(null),
-    [checked, setChecked] = useState(false);
+function Quiz({ block: b, onAnswer, initialValues }) {
+  const [chosen, setChosen] = useState(initialValues?.[0] ?? null),
+    [checked, setChecked] = useState(Boolean(initialValues));
   const valid =
     b.options.length >= 2 &&
     b.options.every((o) => o.trim()) &&
@@ -47,7 +47,10 @@ function Quiz({ block: b, onAnswer }) {
           <div className="lp-game-actions">
             <button
               disabled={chosen === null || checked}
-              onClick={() => { setChecked(true); onAnswer?.([chosen]); }}
+              onClick={() => {
+                setChecked(true);
+                onAnswer?.([chosen]);
+              }}
             >
               Kiểm tra đáp án
             </button>
@@ -75,10 +78,14 @@ function Quiz({ block: b, onAnswer }) {
     </div>
   );
 }
-function Matching({ block: b, onAnswer }) {
+function Matching({ block: b, onAnswer, initialValues }) {
   const [selected, setSelected] = useState(null),
-    [matches, setMatches] = useState({}),
-    [checked, setChecked] = useState(false);
+    [matches, setMatches] = useState(() =>
+      Object.fromEntries(
+        initialValues?.map((value, index) => [index, value]) || [],
+      ),
+    ),
+    [checked, setChecked] = useState(Boolean(initialValues));
   const right = b.pairs.map((p, i) => ({ ...p, index: i })).reverse();
   const connect = (target, source = selected) => {
     if (
@@ -176,7 +183,10 @@ function Matching({ block: b, onAnswer }) {
               disabled={
                 Object.keys(matches).length !== b.pairs.length || checked
               }
-              onClick={() => { setChecked(true); onAnswer?.(b.pairs.map((_, i) => matches[i])); }}
+              onClick={() => {
+                setChecked(true);
+                onAnswer?.(b.pairs.map((_, i) => matches[i]));
+              }}
             >
               Kiểm tra ghép cặp
             </button>
@@ -203,11 +213,11 @@ function Matching({ block: b, onAnswer }) {
     </div>
   );
 }
-function Ordering({ block: b, onAnswer }) {
-  const [order, setOrder] = useState(() =>
-      b.sequence.map((_, i) => i).reverse(),
+function Ordering({ block: b, onAnswer, initialValues }) {
+  const [order, setOrder] = useState(
+      () => initialValues || b.sequence.map((_, i) => i).reverse(),
     ),
-    [checked, setChecked] = useState(false);
+    [checked, setChecked] = useState(Boolean(initialValues));
   const move = (from, to) => {
     if (
       checked ||
@@ -285,7 +295,13 @@ function Ordering({ block: b, onAnswer }) {
             ))}
           </ol>
           <div className="lp-game-actions">
-            <button disabled={checked} onClick={() => { setChecked(true); onAnswer?.(order); }}>
+            <button
+              disabled={checked}
+              onClick={() => {
+                setChecked(true);
+                onAnswer?.(order);
+              }}
+            >
               Kiểm tra thứ tự
             </button>
             <button
@@ -309,108 +325,128 @@ function Ordering({ block: b, onAnswer }) {
     </div>
   );
 }
-export default function BlockPlayer({ block: b, print = false, onAnswer }) {
-  const [submission, setSubmission] = useState(null);
+export default function BlockPlayer({
+  block: b,
+  print = false,
+  onAnswer,
+  initialValues,
+}) {
+  const [submission, setSubmission] = useState(initialValues || null);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState('');
+  const [saveError, setSaveError] = useState("");
   const submit = async (values) => {
     if (!onAnswer) return;
     setSubmission(values);
     setSaving(true);
-    setSaveError('');
-    try { await onAnswer(b.id, values); }
-    catch (error) { setSaveError(error.message); }
-    finally { setSaving(false); }
+    setSaveError("");
+    try {
+      await onAnswer(b.id, values);
+    } catch (error) {
+      setSaveError(error.message);
+    } finally {
+      setSaving(false);
+    }
   };
   const url = mediaUrl(b.url),
     embed = youtubeEmbed(b.url);
   return (
     <article className={"lp-play-block lp-play-" + b.type}>
       {saving && <p role="status">Đang lưu kết quả…</p>}
-      {saveError && <p role="alert">Chưa lưu được kết quả: {saveError} <button disabled={saving} onClick={() => submit(submission)}>Thử lưu lại</button></p>}
-      <div inert={saving || undefined}>
-      <div className="lp-play-caption">
-        <span>{BLOCKS[b.type]?.label}</span>
-        {b.minutes > 0 && <span>{b.minutes} phút</span>}
-      </div>
-      {b.title && <h3>{b.title}</h3>}
-      {b.type === "text" || b.type === "heading" ? (
-        <p className="lp-prose">{b.body}</p>
-      ) : b.type === "image" ? (
-        url ? (
-          <>
-            <img
-              src={url}
-              alt={b.title || b.body || "Hình minh họa"}
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                e.currentTarget.alt =
-                  "Không tải được ảnh. Kiểm tra liên kết và quyền truy cập.";
-              }}
-            />
-            <p>{b.body}</p>
-          </>
-        ) : (
-          <p className="lp-muted">Chưa có liên kết hình ảnh.</p>
-        )
-      ) : b.type === "video" ? (
-        url ? (
-          <>
-            {print ? (
-              <p>Video: {url}</p>
-            ) : embed ? (
-              <iframe
-                title={b.title || "Video bài học"}
-                src={embed}
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-                allow="encrypted-media; picture-in-picture"
-              />
-            ) : (
-              <video
-                controls
-                preload="metadata"
-                src={url}
-                onError={(e) => {
-                  e.currentTarget.setAttribute(
-                    "aria-label",
-                    "Không phát được video. Kiểm tra URL và định dạng.",
-                  );
-                }}
-              >
-                Trình duyệt không hỗ trợ video.
-              </video>
-            )}
-            <p>{b.body}</p>
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              Mở nguồn video ↗
-            </a>
-          </>
-        ) : (
-          <p className="lp-muted">Chưa có liên kết video.</p>
-        )
-      ) : print &&
-        ["wheel", "group-sort", "open-box", "memory"].includes(b.type) ? (
-        <ActivityPrint block={b} />
-      ) : print ? (
-        <div className="lp-print-activity">
-          <p>{b.body}</p>
-          {b.type === "quiz"
-            ? b.options.map((o, i) => <p key={i}>☐ {o}</p>)
-            : b.type === "matching"
-              ? b.pairs.map((p, i) => <p key={i}>{p.left} — __________</p>)
-              : [...b.sequence].reverse().map((s, i) => <p key={i}>☐ {s}</p>)}
-        </div>
-      ) : b.type === "quiz" ? (
-        <Quiz block={b} onAnswer={submit} />
-      ) : b.type === "matching" ? (
-        <Matching block={b} onAnswer={submit} />
-      ) : b.type === "ordering" ? (
-        <Ordering block={b} onAnswer={submit} />
-      ) : (
-        <ActivityGame block={b} onAnswer={submit} />
+      {saveError && (
+        <p role="alert">
+          Chưa lưu được kết quả: {saveError}{" "}
+          <button disabled={saving} onClick={() => submit(submission)}>
+            Thử lưu lại
+          </button>
+        </p>
       )}
+      <div inert={saving || undefined}>
+        <div className="lp-play-caption">
+          <span>{BLOCKS[b.type]?.label}</span>
+          {b.minutes > 0 && <span>{b.minutes} phút</span>}
+        </div>
+        {b.title && <h3>{b.title}</h3>}
+        {b.type === "text" || b.type === "heading" ? (
+          <p className="lp-prose">{b.body}</p>
+        ) : b.type === "image" ? (
+          url ? (
+            <>
+              <img
+                src={url}
+                alt={b.title || b.body || "Hình minh họa"}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.alt =
+                    "Không tải được ảnh. Kiểm tra liên kết và quyền truy cập.";
+                }}
+              />
+              <p>{b.body}</p>
+            </>
+          ) : (
+            <p className="lp-muted">Chưa có liên kết hình ảnh.</p>
+          )
+        ) : b.type === "video" ? (
+          url ? (
+            <>
+              {print ? (
+                <p>Video: {url}</p>
+              ) : embed ? (
+                <iframe
+                  title={b.title || "Video bài học"}
+                  src={embed}
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="encrypted-media; picture-in-picture"
+                />
+              ) : (
+                <video
+                  controls
+                  preload="metadata"
+                  src={url}
+                  onError={(e) => {
+                    e.currentTarget.setAttribute(
+                      "aria-label",
+                      "Không phát được video. Kiểm tra URL và định dạng.",
+                    );
+                  }}
+                >
+                  Trình duyệt không hỗ trợ video.
+                </video>
+              )}
+              <p>{b.body}</p>
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                Mở nguồn video ↗
+              </a>
+            </>
+          ) : (
+            <p className="lp-muted">Chưa có liên kết video.</p>
+          )
+        ) : print &&
+          ["wheel", "group-sort", "open-box", "memory"].includes(b.type) ? (
+          <ActivityPrint block={b} />
+        ) : print ? (
+          <div className="lp-print-activity">
+            <p>{b.body}</p>
+            {b.type === "quiz"
+              ? b.options.map((o, i) => <p key={i}>☐ {o}</p>)
+              : b.type === "matching"
+                ? b.pairs.map((p, i) => <p key={i}>{p.left} — __________</p>)
+                : [...b.sequence].reverse().map((s, i) => <p key={i}>☐ {s}</p>)}
+          </div>
+        ) : b.type === "quiz" ? (
+          <Quiz block={b} onAnswer={submit} initialValues={initialValues} />
+        ) : b.type === "matching" ? (
+          <Matching block={b} onAnswer={submit} initialValues={initialValues} />
+        ) : b.type === "ordering" ? (
+          <Ordering block={b} onAnswer={submit} initialValues={initialValues} />
+        ) : (
+          <ActivityGame
+            block={b}
+            onAnswer={submit}
+            initialValues={initialValues}
+          />
+        )}
       </div>
     </article>
   );
