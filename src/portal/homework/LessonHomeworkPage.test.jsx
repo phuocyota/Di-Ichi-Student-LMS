@@ -11,6 +11,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { PortalContext } from "../portalStore.js";
 import { portalRequest } from "../../services/portalApi.js";
+import LessonHomeworkCard from "./LessonHomeworkCard.jsx";
 import LessonHomeworkPage from "./LessonHomeworkPage.jsx";
 vi.mock("../../services/portalApi.js", () => ({ portalRequest: vi.fn() }));
 vi.mock("../../lesson-plans/SlidePresentation.jsx", () => ({
@@ -144,4 +145,40 @@ it("exposes loading failures and retries without marking homework viewed", async
   expect(
     portalRequest.mock.calls.some(([path]) => path.endsWith("/open")),
   ).toBe(false);
+});
+
+it("distinguishes unviewed homework from a partially answered provisional grade", () => {
+  const { rerender } = render(
+    <MemoryRouter>
+      <LessonHomeworkCard
+        homework={{
+          id: "hw-1",
+          lessonProgress: {
+            firstViewedAt: null,
+            answered: 0,
+            total: 2,
+            score: null,
+          },
+        }}
+      />
+    </MemoryRouter>,
+  );
+  expect(screen.getByText("Chưa xem bài")).toBeInTheDocument();
+  rerender(
+    <MemoryRouter>
+      <LessonHomeworkCard
+        homework={{
+          id: "hw-1",
+          lessonProgress: {
+            firstViewedAt: "2026-11-12",
+            answered: 1,
+            total: 2,
+            score: 50,
+          },
+        }}
+      />
+    </MemoryRouter>,
+  );
+  expect(screen.getByText("1/2 câu đã làm")).toBeInTheDocument();
+  expect(screen.getByText(/50\/100.*Tạm tính/)).toBeInTheDocument();
 });
