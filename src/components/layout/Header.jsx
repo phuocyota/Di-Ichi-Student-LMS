@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { clearAccessToken } from "../../auth/authStorage.js";
 import { usePortal } from "../../portal/portalStore.js";
 export default function Header() {
-  const { data } = usePortal();
+  const { data, busy } = usePortal();
   const navigate = useNavigate();
   return (
     <header className="sticky top-0 z-30 border-b border-orange-100 bg-[#FFF8F2]/95 px-5 py-4 backdrop-blur-xl">
@@ -24,6 +24,7 @@ export default function Header() {
           </NavLink>
           <NavLink to="/profile">Đổi mật khẩu</NavLink>
           <button
+            disabled={busy}
             onClick={() => {
               clearAccessToken();
               navigate("/login", { replace: true });

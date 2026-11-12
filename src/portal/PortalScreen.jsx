@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePortal } from "./portalStore.js";
+import { portalRequest } from "../services/portalApi.js";
 
 const titles = {
   dashboard: "Tổng quan học tập",
@@ -331,6 +332,7 @@ export function PortalScreen({ mode = "dashboard" }) {
         <div className="portal-toolbar">
           <select
             aria-label="Lọc lớp học"
+            disabled={busy}
             value={classId}
             onChange={(e) => setClassId(e.target.value)}
           >
@@ -343,6 +345,7 @@ export function PortalScreen({ mode = "dashboard" }) {
           </select>
           <input
             aria-label="Tìm kiếm"
+            disabled={busy}
             placeholder="Tìm kiếm…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -631,35 +634,97 @@ function Homework({ classId, rows, teacher }) {
   );
 }
 function Submission({ homework }) {
-  const { data, act, busy } = usePortal();
-  const [text, setText] = useState("");
-  const [files, setFiles] = useState([]);
-  const [sending, setSending] = useState(false);
+  const { data, mutate, busy, setError } = usePortal();
   const submission = data.submissions.find((s) => s.homeworkId === homework.id);
   const meta = data.records.find(
     (r) => r.kind === "submission-files" && r.parentId === submission?.id,
   );
+  const [text, setText] = useState(
+    () =>
+      meta?.content.text ??
+      (submission?.markedBy ? "" : (submission?.note ?? "")),
+  );
+  const [keptIds, setKeptIds] = useState(() => meta?.content.fileIds || []);
+  const [files, setFiles] = useState([]);
+  const [uploadedNames, setUploadedNames] = useState({});
+  const [remoteChanged, setRemoteChanged] = useState(false);
+  const dirty = useRef(false);
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
+  const fileInput = useRef(null);
+  const tooManyFiles = keptIds.length + files.length > 10;
+  const remoteText =
+    meta?.content.text ??
+    (submission?.markedBy ? "" : (submission?.note ?? ""));
+  const remoteIds = meta?.content.fileIds || [];
+  const remoteVersion = JSON.stringify([
+    submission?.id,
+    submission?.submittedAt,
+    remoteText,
+    remoteIds,
+  ]);
+  const seenVersion = useRef(remoteVersion);
+  useEffect(() => {
+    if (seenVersion.current === remoteVersion) return;
+    seenVersion.current = remoteVersion;
+    if (sendingRef.current) return; // Our own write is reconciled by mutate's snapshot reload.
+    if (dirty.current) {
+      setRemoteChanged(true);
+      return;
+    }
+    const [, , nextText, nextIds] = JSON.parse(remoteVersion);
+    setText(nextText);
+    setKeptIds(nextIds);
+    setUploadedNames({});
+  }, [remoteVersion]);
+  const fileName = (id) =>
+    uploadedNames[id] ||
+    data.files?.find((f) => f.id === id)?.fileName ||
+    "Tệp đính kèm";
   async function send(e) {
     e.preventDefault();
+    if (busy || sendingRef.current) {
+      setError(
+        "Đang xử lý thao tác trước. Bản nháp được giữ lại; vui lòng thử lại sau.",
+      );
+      return;
+    }
+    if (
+      remoteChanged ||
+      tooManyFiles ||
+      (!text.trim() && !keptIds.length && !files.length)
+    )
+      return;
+    sendingRef.current = true;
     setSending(true);
     try {
-      const ids = [...(meta?.content.fileIds || [])];
-      for (const file of files) {
-        const body = new FormData();
-        body.append("file", file);
-        const saved = await act("/files", { method: "POST", body });
-        if (!saved) return;
-        ids.push(saved.id);
-      }
-      const saved = await act(`/homework/${homework.id}/submissions`, {
-        method: "POST",
-        body: { fileIds: ids, note: text },
+      const saved = await mutate(async () => {
+        const ids = [...keptIds];
+        for (const file of files) {
+          const body = new FormData();
+          body.append("file", file);
+          const uploaded = await portalRequest("/files", {
+            method: "POST",
+            body,
+          });
+          ids.push(uploaded.id);
+          setUploadedNames((names) => ({ ...names, [uploaded.id]: file.name }));
+          setKeptIds([...ids]);
+          setFiles((pending) => pending.filter((item) => item !== file));
+        }
+        return portalRequest(`/homework/${homework.id}/submissions`, {
+          method: "POST",
+          body: { fileIds: ids, note: text },
+        });
       });
       if (saved) {
-        setText("");
-        setFiles([]);
+        dirty.current = false;
+        setRemoteChanged(false);
       }
     } finally {
+      // The remaining files are listed from state; do not display a stale native selection.
+      if (fileInput.current) fileInput.current.value = "";
+      sendingRef.current = false;
       setSending(false);
     }
   }
@@ -686,21 +751,100 @@ function Submission({ homework }) {
         <form onSubmit={send}>
           <label>
             Bài làm
-            <textarea value={text} onChange={(e) => setText(e.target.value)} />
+            <textarea
+              disabled={busy || sending}
+              value={text}
+              onChange={(e) => {
+                dirty.current = true;
+                setText(e.target.value);
+              }}
+            />
           </label>
+          {keptIds.map((id) => (
+            <div key={id}>
+              <span>{fileName(id)}</span>
+              <button
+                type="button"
+                disabled={busy || sending}
+                aria-label={`Gỡ tệp ${fileName(id)}`}
+                onClick={() => {
+                  dirty.current = true;
+                  setKeptIds((ids) => ids.filter((item) => item !== id));
+                }}
+              >
+                Gỡ tệp
+              </button>
+            </div>
+          ))}
           <label>
             Tệp đính kèm (tối đa 10 tệp, 50 MB/tệp)
             <input
+              ref={fileInput}
               type="file"
               multiple
-              onChange={(e) =>
-                setFiles(Array.from(e.target.files).slice(0, 10))
-              }
+              disabled={busy || sending}
+              onChange={(e) => {
+                dirty.current = true;
+                setFiles(Array.from(e.target.files));
+              }}
             />
           </label>
+          {files.map((file, index) => (
+            <div key={`${file.name}-${index}`}>
+              <span>Chờ tải: {file.name}</span>
+              <button
+                type="button"
+                disabled={busy || sending}
+                aria-label={`Gỡ tệp chờ tải ${file.name}`}
+                onClick={() => {
+                  dirty.current = true;
+                  setFiles((pending) => pending.filter((_, i) => i !== index));
+                }}
+              >
+                Gỡ tệp
+              </button>
+            </div>
+          ))}
+          {remoteChanged && (
+            <div role="alert">
+              Bài nộp đã thay đổi ở phiên khác. Bản nháp của bạn được giữ lại.
+              <button
+                type="button"
+                disabled={busy || sending}
+                onClick={() => {
+                  dirty.current = false;
+                  setText(remoteText);
+                  setKeptIds(remoteIds);
+                  setFiles([]);
+                  setUploadedNames({});
+                  setRemoteChanged(false);
+                }}
+              >
+                Dùng bài nộp mới
+              </button>
+              <button
+                type="button"
+                disabled={busy || sending}
+                onClick={() => setRemoteChanged(false)}
+              >
+                Tiếp tục với bản nháp của tôi
+              </button>
+            </div>
+          )}
+          {tooManyFiles && (
+            <p role="alert">
+              Tổng số tệp giữ lại và tệp mới không được vượt quá 10.
+            </p>
+          )}
           <button
             className="primary"
-            disabled={busy || sending || (!text.trim() && !files.length)}
+            disabled={
+              busy ||
+              sending ||
+              remoteChanged ||
+              tooManyFiles ||
+              (!text.trim() && !keptIds.length && !files.length)
+            }
           >
             {sending
               ? "Đang gửi…"

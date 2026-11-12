@@ -5,17 +5,25 @@ export async function portalRequest(
   path,
   { method = "GET", body, signal, download = false } = {},
 ) {
+  const form = body instanceof FormData;
   const response = await fetch(getApiUrl() + "/portal" + path, {
     method,
     signal,
     headers: {
       Authorization: "Bearer " + getAccessToken(),
-      ...(body ? { "Content-Type": "application/json" } : {}),
+      ...(!form && body ? { "Content-Type": "application/json" } : {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (form ? body : JSON.stringify(body)) : undefined,
   });
   if (response.status === 401) clearAccessToken();
-  if (download && response.ok) return { blob: await response.blob() };
+  if (download && response.ok)
+    return {
+      blob: await response.blob(),
+      name: decodeURIComponent(
+        response.headers.get("Content-Disposition")?.split("UTF-8''")[1] ||
+          "tai-lieu",
+      ),
+    };
   const payload = await response.json().catch(() => null);
   if (!response.ok || payload?.success === false)
     throw new Error(

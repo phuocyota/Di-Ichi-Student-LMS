@@ -4,52 +4,11 @@
   PORTAL_RESOURCES,
 } from "../services/realtime.js";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  getAccessToken,
-  clearAccessToken as clearAuthSession,
-} from "../auth/authStorage.js";
 import "./portal.css";
 
 import { PortalContext as Context } from "./portalStore.js";
-const base = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(
-  /\/$/,
-  "",
-);
-async function portalRequest(
-  path,
-  { method = "GET", body, signal, download = false } = {},
-) {
-  const form = body instanceof FormData;
-  const response = await fetch(`${base}/portal${path}`, {
-    method,
-    signal,
-    headers: {
-      Authorization: `Bearer ${getAccessToken()}`,
-      ...(!form && body ? { "Content-Type": "application/json" } : {}),
-    },
-    body: body ? (form ? body : JSON.stringify(body)) : undefined,
-  });
-  if (response.status === 401) {
-    clearAuthSession();
-    window.location.assign("/login");
-  }
-  if (download && response.ok)
-    return {
-      blob: await response.blob(),
-      name: decodeURIComponent(
-        response.headers.get("Content-Disposition")?.split("UTF-8''")[1] ||
-          "tai-lieu",
-      ),
-    };
-  const payload = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new Error(
-      Array.isArray(payload?.message)
-        ? payload.message.join("; ")
-        : payload?.message || "Không thể kết nối máy chủ",
-    );
-  return payload?.data ?? payload;
-}
+import { portalRequest } from "../services/portalApi.js";
+import { clearAccessToken as clearAuthSession } from "../auth/authStorage.js";
 export function PortalProvider({ children }) {
   const realtimeStatus = useUpdatesConnection();
   const [data, setData] = useState(null);
@@ -77,14 +36,18 @@ export function PortalProvider({ children }) {
     return () => controller.abort();
   }, [reload]);
   useResourceUpdates(() => reload().catch(() => {}), PORTAL_RESOURCES, !busy);
-  const act = async (path, options = {}) => {
-    if (lock.current) return null;
+  // One lock owns the whole workflow, including file uploads before the final write.
+  const mutate = async (work) => {
+    if (lock.current) {
+      setError("Đang xử lý thao tác trước. Vui lòng chờ hoàn tất rồi thử lại.");
+      return null;
+    }
     lock.current = true;
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      const result = await portalRequest(path, options);
+      const result = await work();
       try {
         await reload();
         setNotice("Đã lưu thành công");
@@ -100,6 +63,26 @@ export function PortalProvider({ children }) {
       setBusy(false);
     }
   };
+  useEffect(() => {
+    if (!busy) return;
+    const preventUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", preventUnload);
+    return () => window.removeEventListener("beforeunload", preventUnload);
+  }, [busy]);
+  const preventBusyNavigation = (event) => {
+    if (lock.current && event.target.closest("a")) {
+      event.preventDefault();
+      event.stopPropagation();
+      setError(
+        "Đang xử lý bài nộp. Vui lòng chờ hoàn tất trước khi chuyển trang.",
+      );
+    }
+  };
+  const act = (path, options = {}) =>
+    mutate(() => portalRequest(path, options));
   const download = async (id) => {
     try {
       const { blob, name } = await portalRequest(`/files/${id}`, {
@@ -117,7 +100,16 @@ export function PortalProvider({ children }) {
   };
   return (
     <Context.Provider
-      value={{ data, act, busy, download, reload, setError, realtimeStatus }}
+      value={{
+        data,
+        act,
+        mutate,
+        busy,
+        download,
+        reload,
+        setError,
+        realtimeStatus,
+      }}
     >
       <div className="portal-status" aria-live="polite">
         <p className={`portal-realtime is-${realtimeStatus}`}>
@@ -127,11 +119,19 @@ export function PortalProvider({ children }) {
               ? "Đang kết nối đồng bộ…"
               : "Đang kết nối lại · Tạm cập nhật mỗi 30 giây"}
         </p>
+        {busy && (
+          <p role="status">
+            Đang xử lý bài nộp hoặc thao tác khác. Vui lòng chờ hoàn tất.
+          </p>
+        )}
         {error && (
           <div role="alert" className="portal-error">
             {error}{" "}
-            <button onClick={() => reload().catch(() => {})}>Thử lại</button>
+            <button disabled={busy} onClick={() => reload().catch(() => {})}>
+              Thử lại
+            </button>
             <button
+              disabled={busy}
               onClick={() => {
                 clearAuthSession();
                 window.location.assign("/login");
@@ -143,13 +143,15 @@ export function PortalProvider({ children }) {
         )}
         {notice && <div className="portal-notice">{notice}</div>}
       </div>
-      {data
-        ? children
-        : !error && (
-            <p className="portal-loading" role="status">
-              Đang tải dữ liệu…
-            </p>
-          )}
+      {data ? (
+        <div onClickCapture={preventBusyNavigation}>{children}</div>
+      ) : (
+        !error && (
+          <p className="portal-loading" role="status">
+            Đang tải dữ liệu…
+          </p>
+        )
+      )}
     </Context.Provider>
   );
 }
