@@ -4,7 +4,14 @@ import { LessonScene } from "./LessonAppearance.jsx";
 import BlockPlayer from "./BlockPlayer.jsx";
 import "./slide-presentation.css";
 
-export default function SlidePresentation({ plan, onClose, onAnswer, startIndex = 0 }) {
+export default function SlidePresentation({
+  plan,
+  onClose,
+  onAnswer,
+  startIndex = 0,
+  summary = null,
+  closeDisabled = false,
+}) {
   const canvasMode = Boolean(plan.pages?.length);
   const slides = canvasMode ? plan.pages : plan.blocks;
   const [index, setIndex] = useState(
@@ -118,6 +125,7 @@ export default function SlidePresentation({ plan, onClose, onAnswer, startIndex 
         <div>
           <span>TRÌNH CHIẾU</span>
           <h1>{plan.title || "Bài học"}</h1>
+          {summary && <p role="status">{summary}</p>}
         </div>
         <div>
           <button aria-pressed={paused} onClick={() => setPaused((v) => !v)}>
@@ -126,7 +134,9 @@ export default function SlidePresentation({ plan, onClose, onAnswer, startIndex 
           <button onClick={toggleFullscreen}>
             {fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
           </button>
-          <button onClick={onClose}>Đóng trình chiếu</button>
+          <button disabled={closeDisabled} onClick={onClose}>
+            Đóng trình chiếu
+          </button>
         </div>
       </header>
       {message && (
@@ -208,7 +218,12 @@ export default function SlidePresentation({ plan, onClose, onAnswer, startIndex 
             {slides.length ? `Slide ${active + 1}/${slides.length}` : "0 slide"}
           </strong>
           <span>{slides[active]?.title || ""}</span>
-          {plan.progress && <span>Đã làm {plan.progress.answered}/{plan.progress.total} câu · Đúng {plan.progress.correct} · Sai {plan.progress.incorrect}</span>}
+          {plan.progress && (
+            <span>
+              Đã làm {plan.progress.answered}/{plan.progress.total} câu · Đúng{" "}
+              {plan.progress.correct} · Sai {plan.progress.incorrect}
+            </span>
+          )}
         </div>
         <button
           disabled={active >= slides.length - 1 || !slides.length}

@@ -1,3 +1,4 @@
+import LessonHomeworkCard from "./homework/LessonHomeworkCard.jsx";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePortal } from "./portalStore.js";
@@ -638,6 +639,8 @@ function Homework({ classId, rows, teacher }) {
                   Chỉnh sửa
                 </button>
               </>
+            ) : h.lessonPlanId ? (
+              <LessonHomeworkCard homework={h} />
             ) : (
               <Submission homework={h} />
             )}

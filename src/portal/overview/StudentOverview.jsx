@@ -56,7 +56,14 @@ export function StudentOverview({ notifications }) {
   ).length;
   const submittedIds = new Set(data.submissions.map((s) => s.homeworkId));
   const pending = data.homework
-    .filter((h) => h.status === "assigned" && !submittedIds.has(h.id))
+    .filter(
+      (h) =>
+        h.status === "assigned" &&
+        (h.lessonPlanId
+          ? !h.lessonProgress ||
+            h.lessonProgress.answered < h.lessonProgress.total
+          : !submittedIds.has(h.id)),
+    )
     .sort((a, b) => Date.parse(a.deadline) - Date.parse(b.deadline));
   const upcoming = data.schedules
     .filter((s) => s.status !== "cancelled" && Date.parse(s.endAt) > now)
