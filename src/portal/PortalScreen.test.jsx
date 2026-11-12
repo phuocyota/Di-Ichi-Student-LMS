@@ -476,6 +476,135 @@ describe("API portal screens", () => {
     expect(screen.getByLabelText("Bài làm")).toHaveValue("Keep this draft");
     expect(screen.getByRole("button", { name: "Nộp lại bài" })).toBeEnabled();
   });
+  it("shows API overview counts, sorts upcoming lessons and excludes submitted or inactive homework", async () => {
+    const data = empty();
+    const later = (hours) =>
+      new Date(Date.now() + hours * 3600000).toISOString();
+    data.classes = [
+      { id: "c1", name: "Lớp sớm" },
+      { id: "c2", name: "Lớp muộn" },
+    ];
+    data.schedules = [
+      {
+        id: "later",
+        classId: "c2",
+        startAt: later(48),
+        endAt: later(49),
+        status: "upcoming",
+      },
+      {
+        id: "cancelled",
+        classId: "c2",
+        startAt: later(1),
+        endAt: later(2),
+        status: "cancelled",
+      },
+      {
+        id: "earlier",
+        classId: "c1",
+        startAt: later(24),
+        endAt: later(25),
+        status: "upcoming",
+      },
+      {
+        id: "past",
+        classId: "c2",
+        startAt: later(-2),
+        endAt: later(-1),
+        status: "completed",
+      },
+    ];
+    data.homework = [
+      {
+        id: "todo",
+        classId: "c1",
+        title: "Bài đang chờ",
+        deadline: later(30),
+        status: "assigned",
+      },
+      {
+        id: "submitted",
+        classId: "c1",
+        title: "Bài đã nộp",
+        deadline: later(20),
+        status: "assigned",
+      },
+      {
+        id: "closed",
+        classId: "c1",
+        title: "Bài đã đóng",
+        deadline: later(10),
+        status: "closed",
+      },
+    ];
+    data.submissions = [{ id: "sub", homeworkId: "submitted" }];
+    data.records = [
+      { id: "progress-1", kind: "progress", content: { percent: 100 } },
+    ];
+    fetch.mockResolvedValue(ok(data));
+    mount("dashboard");
+    expect(
+      await screen.findByRole("heading", { name: "Tổng quan học tập" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Chào API User/ }),
+    ).toBeInTheDocument();
+    const tasks = within(
+      screen.getByRole("region", { name: "Bài tập cần nộp" }),
+    );
+    expect(tasks.getByText("Bài đang chờ")).toBeInTheDocument();
+    expect(tasks.queryByText("Bài đã nộp")).not.toBeInTheDocument();
+    expect(tasks.queryByText("Bài đã đóng")).not.toBeInTheDocument();
+    const schedule = within(
+      screen.getByRole("region", { name: "Lịch học của bạn" }),
+    );
+    expect(
+      schedule.getAllByRole("heading", { level: 3 }).map((n) => n.textContent),
+    ).toEqual(["Lớp sớm", "Lớp muộn"]);
+    expect(screen.getByRole("link", { name: "Vào học" })).toHaveAttribute(
+      "href",
+      "/lessons",
+    );
+    expect(
+      screen.queryByRole("combobox", { name: "Lọc lớp học" }),
+    ).not.toBeInTheDocument();
+  });
+  it("expands real overview notifications and marks them read with the existing API", async () => {
+    const data = empty();
+    data.notifications = [1, 2, 3, 4].map((id) => ({
+      id: `n-${id}`,
+      title: `Thông báo thật ${id}`,
+      content: "Nội dung API",
+      createdAt: new Date().toISOString(),
+      readAt: null,
+    }));
+    fetch.mockImplementation(async (url, opts) => {
+      if (opts.method === "PATCH") {
+        expect(url).toMatch(/notifications\/n-1\/read$/);
+        data.notifications[0].readAt = new Date().toISOString();
+        return ok({ id: "n-1" });
+      }
+      return ok(structuredClone(data));
+    });
+    mount("dashboard");
+    await screen.findByText("Thông báo thật 1");
+    expect(screen.queryByText("Thông báo thật 4")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Xem tất cả thông báo"));
+    expect(screen.getByText("Thông báo thật 4")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Đánh dấu đã đọc" })[0],
+    );
+    await screen.findByText("Đã lưu thành công");
+    expect(
+      screen.getAllByRole("button", { name: "Đánh dấu đã đọc" }),
+    ).toHaveLength(3);
+    fireEvent.click(screen.getByText("Thu gọn thông báo"));
+    expect(screen.queryByText("Thông báo thật 4")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Không có bài tập đang chờ nộp"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Chưa có lịch học sắp tới")).toBeInTheDocument();
+  });
   it("includes teacher exams in the student quiz list", async () => {
     const data = empty();
     data.records = [

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePortal } from "./portalStore.js";
 import { portalRequest } from "../services/portalApi.js";
+import { StudentOverview } from "./overview/StudentOverview.jsx";
 
 const titles = {
   dashboard: "Tổng quan học tập",
@@ -92,6 +93,8 @@ export function PortalScreen({ mode = "dashboard" }) {
         certificates: "/certificates",
         achievements: "/achievements",
       };
+  if (mode === "dashboard" && !teacher)
+    return <StudentOverview notifications={<Notifications compact />} />;
   let content;
   if (mode === "profile")
     content = (
@@ -357,13 +360,16 @@ export function PortalScreen({ mode = "dashboard" }) {
   );
 }
 
-function Notifications() {
+function Notifications({ compact = false }) {
   const { data, act, busy } = usePortal();
+  const [showAll, setShowAll] = useState(false);
+  const rows =
+    compact && !showAll ? data.notifications.slice(0, 3) : data.notifications;
   return (
     <>
       <h2>Thông báo</h2>
       {data.notifications.length ? (
-        data.notifications.map((n) => (
+        rows.map((n) => (
           <Card key={n.id}>
             <h2>{n.title}</h2>
             <p>{n.content}</p>
@@ -382,6 +388,15 @@ function Notifications() {
         ))
       ) : (
         <Empty>Chưa có thông báo.</Empty>
+      )}
+      {compact && data.notifications.length > 3 && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => setShowAll((value) => !value)}
+        >
+          {showAll ? "Thu gọn thông báo" : "Xem tất cả thông báo"}
+        </button>
       )}
     </>
   );
