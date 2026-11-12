@@ -6,11 +6,16 @@ export default function LessonHomeworkCard({ homework }) {
     <div className="portal-card">
       <p>Giáo án · Chấm tự động</p>
       <p>
-        {progress
+        {progress?.firstViewedAt
           ? `${progress.answered}/${progress.total} câu đã làm`
           : "Chưa xem bài"}
       </p>
-      {progress?.score != null && <p>Điểm tự chấm: {progress.score}/100</p>}
+      {progress?.score != null && (
+        <p>
+          Điểm tự chấm: {progress.score}/100
+          {progress.answered < progress.total ? " · Tạm tính" : ""}
+        </p>
+      )}
       <Link to={`/homework/${homework.id}/lesson`}>Mở giáo án làm bài</Link>
     </div>
   );

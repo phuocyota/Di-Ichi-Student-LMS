@@ -127,7 +127,13 @@ function HomeworkAttempt({ homeworkId }) {
             {plan.progress.answered}/{plan.progress.total} câu đã làm · Đúng:{" "}
             {plan.progress.correct} · Sai: {plan.progress.incorrect}
           </p>
-          <p>Điểm tự chấm: {plan.progress.score ?? "—"}/100</p>
+          <p>
+            Điểm tự chấm: {plan.progress.score ?? "—"}/100
+            {plan.progress.score != null &&
+            plan.progress.answered < plan.progress.total
+              ? " · Tạm tính"
+              : ""}
+          </p>
           <button className="primary" disabled={saving || busy} onClick={start}>
             {saving
               ? "Đang lưu…"
