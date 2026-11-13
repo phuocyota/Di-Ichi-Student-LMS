@@ -4,6 +4,7 @@ import { ConnectionBanner } from './ConnectionBanner.jsx';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ControlBar,
+  LayoutContextProvider,
   RoomAudioRenderer,
   StartAudio,
   useRoomContext,
@@ -52,6 +53,7 @@ function ClassroomExperience({ joinData, onLeave, onEnded, onDeviceError }) {
   }
 
   return (
+    <LayoutContextProvider>
     <div className="flex min-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-3xl bg-slate-950 text-white" data-lk-theme="default">
       <ConnectionBanner />
       <header className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
@@ -93,6 +95,7 @@ function ClassroomExperience({ joinData, onLeave, onEnded, onDeviceError }) {
       </div>
       </main><ClassroomPanels /></div>
     </div>
+    </LayoutContextProvider>
   );
 }
 
