@@ -104,15 +104,6 @@ function ClassroomExperience({ joinData, onLeave, onEnded, onDeviceError }) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="live-open-lesson"
-              aria-expanded={showLesson}
-              aria-controls="live-lesson-workspace"
-              onClick={openLesson}
-            >
-              <BookOpen size={18} aria-hidden="true" /> Mở giáo án
-            </button>
             {presenting && (
               <span className="live-presentation-badge" role="status">
                 Giáo viên đang trình chiếu
@@ -176,68 +167,70 @@ function ClassroomExperience({ joinData, onLeave, onEnded, onDeviceError }) {
           </div>
         </div>
         <footer className="live-controls" aria-label="Điều khiển lớp học">
-          <div className="live-media-controls">
-            {' '}
-            <ControlBar
-              variation="verbose"
-              controls={{
-                microphone: permissions.canUseMic,
-                camera: permissions.canUseCamera,
-                screenShare: permissions.canShareScreen,
-                chat: false,
-                settings: true,
-                leave: false,
-              }}
-              onDeviceError={({ error }) => onDeviceError(error.message)}
-            />
-          </div>
-          <div className="live-meeting-tools" aria-label="Công cụ lớp học">
-            <button
-              type="button"
-              className="live-tool-button"
-              aria-expanded={boardOpen}
-              aria-controls="live-whiteboard"
-              onClick={() => setBoardOpen(true)}
-            >
-              <PenLine size={18} aria-hidden="true" /> Bảng trắng
-            </button>
-            <button
-              type="button"
-              className="live-tool-button"
-              aria-pressed={showLesson}
-              onClick={() => {
-                setShowLesson((value) => !value);
-              }}
-            >
-              <BookOpen size={18} aria-hidden="true" />{' '}
-              {showLesson ? 'Ẩn giáo án' : 'Giáo án'}
-            </button>
-          </div>
+          <div className="live-toolbar-actions">
+            <div className="live-media-controls">
+              {' '}
+              <ControlBar
+                variation="verbose"
+                controls={{
+                  microphone: permissions.canUseMic,
+                  camera: permissions.canUseCamera,
+                  screenShare: permissions.canShareScreen,
+                  chat: false,
+                  settings: true,
+                  leave: false,
+                }}
+                onDeviceError={({ error }) => onDeviceError(error.message)}
+              />
+            </div>
+            <div className="live-meeting-tools" aria-label="Công cụ lớp học">
+              <button
+                type="button"
+                className="live-tool-button"
+                aria-expanded={boardOpen}
+                aria-controls="live-whiteboard"
+                onClick={() => setBoardOpen(true)}
+              >
+                <PenLine size={18} aria-hidden="true" /> Bảng trắng
+              </button>
+              <button
+                type="button"
+                className="live-tool-button"
+                aria-pressed={showLesson}
+                onClick={() => {
+                  setShowLesson((value) => !value);
+                }}
+              >
+                <BookOpen size={18} aria-hidden="true" />{' '}
+                {showLesson ? 'Ẩn giáo án' : 'Mở giáo án'}
+              </button>
+            </div>
 
-          {joinData.role === 'student' ? (
-            <button
-              type="button"
-              onClick={toggleHand}
-              disabled={!connected}
-              aria-pressed={handRaised}
-              className={`live-tool-button flex items-center gap-2 rounded-xl px-4 py-3 font-black ${handRaised ? 'bg-orange-500' : 'bg-slate-700'}`}
-            >
-              <Hand className="h-5 w-5" />
-              {handRaised ? 'Hạ tay' : 'Giơ tay'}
-            </button>
-          ) : null}
-          <div className="live-panel-controls">
-            <button
-              type="button"
-              className="live-tool-button"
-              aria-expanded={sidePanel === 'chat'}
-              aria-controls="live-side-panel"
-              onClick={() =>
-                setSidePanel((value) => (value === 'chat' ? null : 'chat'))
-              }
-            >
-              <MessageSquare size={21} aria-hidden="true" /> Trò chuyện
-            </button>
+            {joinData.role === 'student' ? (
+              <button
+                type="button"
+                onClick={toggleHand}
+                disabled={!connected}
+                aria-pressed={handRaised}
+                className={`live-tool-button flex items-center gap-2 rounded-xl px-4 py-3 font-black ${handRaised ? 'bg-orange-500' : 'bg-slate-700'}`}
+              >
+                <Hand className="h-5 w-5" />
+                {handRaised ? 'Hạ tay' : 'Giơ tay'}
+              </button>
+            ) : null}
+            <div className="live-panel-controls">
+              <button
+                type="button"
+                className="live-tool-button"
+                aria-expanded={sidePanel === 'chat'}
+                aria-controls="live-side-panel"
+                onClick={() =>
+                  setSidePanel((value) => (value === 'chat' ? null : 'chat'))
+                }
+              >
+                <MessageSquare size={21} aria-hidden="true" /> Trò chuyện
+              </button>
+            </div>
           </div>
           <div className="live-exit-controls">
             {' '}
