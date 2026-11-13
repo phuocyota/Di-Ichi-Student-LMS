@@ -15,6 +15,7 @@ import {
   BarChart3,
   FolderOpen,
   Trophy,
+  Video,
 } from "lucide-react";
 import { usePortal } from "../portalStore.js";
 import "./student-overview.css";
@@ -114,6 +115,10 @@ export function StudentOverview({ notifications }) {
             Cùng tiếp tục hành trình học tập của bạn nhé!
           </p>
           <div className="overview-welcome-actions">
+              <Link className="overview-primary-link" to="/online">
+                <Video size={18} aria-hidden="true" /> Vào lớp online
+                <ArrowRight size={17} aria-hidden="true" />
+              </Link>
             <Link className="overview-primary-link" to="/lessons">
               <Play size={16} aria-hidden="true" /> Vào học{" "}
               <ArrowRight size={17} aria-hidden="true" />
