@@ -15,6 +15,7 @@ function OnlineClassCard({ item }) {
         <p><GraduationCap className="mr-2 inline h-5 w-5 text-[#2563EB]" />{item.teacherName}</p>
         <p><MessageCircle className="mr-2 inline h-5 w-5 text-[#22C55E]" />{item.physicalRoom || 'Phòng học trực tuyến'}</p>
       </div>
+      {!item.meetingStarted && new Date(item.startAt).getTime() > Date.now() && <p className="mt-4 font-bold text-orange-600">Bắt đầu sau {Math.ceil((new Date(item.startAt).getTime() - Date.now()) / 60000)} phút</p>}
       {item.canJoin ? (
         <Link to={`/online/${item.scheduleId}`} className="mt-8 block w-full rounded-3xl bg-[#F97316] py-5 text-center text-xl font-black text-white shadow-lg shadow-orange-200">Tham gia</Link>
       ) : (

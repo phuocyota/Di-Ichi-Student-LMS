@@ -1,8 +1,9 @@
+import { ClassroomStage } from './ClassroomStage.jsx';
+import { ClassroomPanels } from './ClassroomPanels.jsx';
+import { ConnectionBanner } from './ConnectionBanner.jsx';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ControlBar,
-  GridLayout,
-  ParticipantTile,
   RoomAudioRenderer,
   StartAudio,
   useRoomContext,
@@ -14,7 +15,7 @@ import { Track } from 'livekit-client';
 import { useClassroomSocket } from '../../hooks/useClassroomSocket.js';
 import ClassroomBoard from './ClassroomBoard.jsx';
 
-function ClassroomExperience({ joinData, onLeave, onDeviceError }) {
+function ClassroomExperience({ joinData, onLeave, onEnded, onDeviceError }) {
   const room = useRoomContext();
   const [permissions, setPermissions] = useState(joinData.permissions);
   const [handRaised, setHandRaised] = useState(false);
@@ -23,6 +24,7 @@ function ClassroomExperience({ joinData, onLeave, onDeviceError }) {
     scheduleId: joinData.scheduleId,
     identity: joinData.identity,
     onPermissionChanged,
+    onEnded,
   });
   const participants = useParticipants();
   const tracks = useTracks(
@@ -51,17 +53,17 @@ function ClassroomExperience({ joinData, onLeave, onDeviceError }) {
 
   return (
     <div className="flex min-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-3xl bg-slate-950 text-white" data-lk-theme="default">
+      <ConnectionBanner />
       <header className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
         <div>
           <p className="text-xs font-black uppercase text-orange-400">Lớp học trực tuyến</p>
-          <h1 className="text-xl font-black">{joinData.displayName}</h1>
+          <h1 className="text-xl font-black">{joinData.className || joinData.displayName}</h1>
           <p className="text-xs font-semibold text-slate-400">{participants.length} người tham gia · Realtime {connected ? 'đã kết nối' : 'đang kết nối lại'}</p>
         </div>
         <button type="button" onClick={onLeave} className="rounded-2xl bg-red-500 px-4 py-2 font-black">Rời lớp</button>
       </header>
-      <GridLayout tracks={tracks} className="lk-grid-layout flex-1 p-4">
-        <ParticipantTile />
-      </GridLayout>
+      <div className="flex min-h-0 flex-1 flex-col xl:flex-row"><main className="flex min-w-0 flex-1 flex-col">
+      <ClassroomStage tracks={tracks} hostIdentity={joinData.hostIdentity} />
       <RoomAudioRenderer />
       <StartAudio label="Bật âm thanh" />
       <ClassroomBoard
@@ -89,6 +91,7 @@ function ClassroomExperience({ joinData, onLeave, onDeviceError }) {
           </button>
         ) : null}
       </div>
+      </main><ClassroomPanels /></div>
     </div>
   );
 }

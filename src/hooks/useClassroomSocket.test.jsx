@@ -86,3 +86,16 @@ it("does not reconnect just because the permission callback changes and ignores 
   );
   expect(second).toHaveBeenCalledWith({ canUseMic: false });
 });
+
+it('forwards classroom:ended only for the selected schedule and stops readiness', () => {
+  const ended = vi.fn();
+  const { result } = renderHook(() => useClassroomSocket({ scheduleId: 's1', onEnded: ended }));
+  act(() => handlers.connect());
+  act(() => acknowledge(null, { scheduleId: 's1' }));
+  expect(result.current.connected).toBe(true);
+  act(() => handlers['classroom:ended']({ scheduleId: 'other' }));
+  expect(ended).not.toHaveBeenCalled();
+  act(() => handlers['classroom:ended']({ scheduleId: 's1' }));
+  expect(ended).toHaveBeenCalledOnce();
+  expect(result.current.connected).toBe(false);
+});

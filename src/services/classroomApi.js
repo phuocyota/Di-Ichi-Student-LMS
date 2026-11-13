@@ -9,3 +9,6 @@ export function joinClassroom(scheduleId) {
     method: 'POST',
   });
 }
+
+export const getOnlineSession = (id) => apiRequest(`/schedule/${encodeURIComponent(id)}/online-session`);
+export const isFeatureDisabledError = (error) => error?.status === 404;

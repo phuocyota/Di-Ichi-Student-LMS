@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createRealtimeSocket } from "../services/realtime.js";
 import { disposeRealtimeSocket } from "../services/socketSession.js";
 import { subscribeSocket } from "../services/socketSubscription.js";
@@ -6,12 +6,15 @@ export function useClassroomSocket({
   scheduleId,
   identity,
   onPermissionChanged,
+  onEnded,
 }) {
   const [socket, setSocket] = useState(null),
     [connected, setConnected] = useState(false);
   const latest = useRef(onPermissionChanged);
+  const ended = useRef(onEnded);
   useEffect(() => {
     latest.current = onPermissionChanged;
+    ended.current = onEnded;
   });
   useEffect(() => {
     if (!scheduleId) return;
@@ -38,6 +41,7 @@ export function useClassroomSocket({
       if (event?.scheduleId === scheduleId) {
         stop();
         unavailable();
+        ended.current?.();
       }
     });
     client.on("classroom:permission-changed", (event) => {
