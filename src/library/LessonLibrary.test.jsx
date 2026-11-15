@@ -81,3 +81,21 @@ it('submits filters and resets pagination', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Tìm kiếm' }))
   await waitFor(() => expect(libraryRequest.mock.calls.some(([path]) => path.startsWith('?') && new URLSearchParams(path.slice(1)).get('search') === 'Phân số' && new URLSearchParams(path.slice(1)).get('page') === '1')).toBe(true))
 })
+
+it('reveals the AI description on demand and explains when none exists', async () => {
+  records = [lesson]
+  render(<LessonLibrary />)
+  fireEvent.click(await screen.findByRole('button', { name: /Phân số/ }))
+  let dialog = await screen.findByRole('dialog', { name: 'Chi tiết bài giảng' })
+  fireEvent.click(within(dialog).getByText('Xem mô tả AI'))
+  expect(within(dialog).getByText('Chưa có mô tả AI cho bài giảng này.')).toBeVisible()
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Đóng' }))
+  const base = libraryRequest.getMockImplementation()
+  libraryRequest.mockImplementation(async (path, options) => path === '/lesson-1' ? { ...lesson, aiDescription: 'Tóm tắt AI: phân số cơ bản' } : base(path, options))
+  fireEvent.click(await screen.findByRole('button', { name: /Phân số/ }))
+  dialog = await screen.findByRole('dialog', { name: 'Chi tiết bài giảng' })
+  const toggle = within(dialog).getByText('Xem mô tả AI')
+  expect(within(dialog).getByText('Tóm tắt AI: phân số cơ bản')).not.toBeVisible()
+  fireEvent.click(toggle)
+  expect(within(dialog).getByText('Tóm tắt AI: phân số cơ bản')).toBeVisible()
+})
