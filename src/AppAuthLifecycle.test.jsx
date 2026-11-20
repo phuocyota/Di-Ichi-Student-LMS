@@ -5,6 +5,12 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App.jsx";
 import { setAccessToken } from "./auth/authStorage.js";
+// Loader thật gọi từng route GET; test đọc fixture snapshot qua fetch.
+vi.mock("./portal/portalLoaders.js", async (importOriginal) => ({
+  ...(await importOriginal()),
+  loadPortal: (await import("./test/portalLoadersMock.js")).fixtureLoadPortal,
+}));
+
 
 let responseStatus;
 beforeEach(() => {

@@ -8,6 +8,12 @@ import "./portal.css";
 
 import { PortalContext as Context } from "./portalStore.js";
 import { portalRequest } from "../services/portalApi.js";
+import {
+  PORTAL_SECTIONS,
+  loadPortal,
+  mergePortal,
+  sectionsForChange,
+} from "./portalLoaders.js";
 import { clearAccessToken as clearAuthSession } from "../auth/authStorage.js";
 export function PortalProvider({ children }) {
   const realtimeStatus = useUpdatesConnection();
@@ -17,25 +23,56 @@ export function PortalProvider({ children }) {
   const [notice, setNotice] = useState("");
   const lock = useRef(false);
   const revision = useRef(0);
-  const reload = useCallback(async (signal) => {
+  const sectionRevision = useRef(new Map());
+  const baseRevision = useRef(0);
+  const dataRef = useRef(null);
+  dataRef.current = data;
+  // Mỗi phần gọi route GET riêng; chỉ tải lại phần bị ảnh hưởng bởi thay đổi.
+  const load = useCallback(async (sections, { base = false, signal } = {}) => {
     const request = ++revision.current;
+    sections.forEach((section) => sectionRevision.current.set(section, request));
+    const withBase = base || !dataRef.current;
     try {
-      const next = await portalRequest("/snapshot", { signal });
-      if (request === revision.current) {
-        setData(next);
-        setError("");
+      const next = await loadPortal(sections, { base: withBase, signal });
+      // Bỏ phần đã có yêu cầu mới hơn đang chạy để phản hồi cũ không đè dữ liệu mới.
+      for (const section of sections)
+        if (sectionRevision.current.get(section) !== request) {
+          delete next[section];
+          if (section === "documents") delete next.classDocuments;
+        }
+      if (withBase) {
+        if (request > baseRevision.current) baseRevision.current = request;
+        else {
+          delete next.profile;
+          delete next.classes;
+        }
       }
+      setData((current) => mergePortal(current, next));
+      setError("");
     } catch (e) {
-      if (request === revision.current && !signal?.aborted) setError(e.message);
+      if (!signal?.aborted) setError(e.message);
       throw e;
     }
   }, []);
+  const reload = useCallback(
+    (signal) => load(PORTAL_SECTIONS, { base: true, signal }),
+    [load],
+  );
   useEffect(() => {
     const controller = new AbortController();
     reload(controller.signal).catch(() => {});
     return () => controller.abort();
   }, [reload]);
-  useResourceUpdates(() => reload().catch(() => {}), PORTAL_RESOURCES, !busy);
+  useResourceUpdates(
+    (change) => {
+      const { sections, base } = sectionsForChange(change);
+      return sections.length || base
+        ? load(sections, { base }).catch(() => {})
+        : undefined;
+    },
+    PORTAL_RESOURCES,
+    !busy,
+  );
   // One lock owns the whole workflow, including file uploads before the final write.
   const mutate = async (work) => {
     if (lock.current) {

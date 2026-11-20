@@ -15,6 +15,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PortalProvider } from "./PortalContext.jsx";
 import { PortalScreen } from "./PortalScreen.jsx";
 import { usePortal } from "./portalStore.js";
+// Loader thật gọi từng route GET; test đọc fixture snapshot qua fetch.
+vi.mock("../portal/portalLoaders.js", async (importOriginal) => ({
+  ...(await importOriginal()),
+  loadPortal: (await import("../test/portalLoadersMock.js")).fixtureLoadPortal,
+}));
+
 
 const empty = () => ({
   profile: {
