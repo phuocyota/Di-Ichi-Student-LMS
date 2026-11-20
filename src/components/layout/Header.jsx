@@ -6,7 +6,7 @@ export default function Header() {
   const { data, busy } = usePortal();
   const navigate = useNavigate();
   return (
-    <header className="sticky top-0 z-30 border-b border-orange-100 bg-[#FFF8F2]/95 px-5 py-4 backdrop-blur-xl">
+    <header className="relative z-30 sm:sticky sm:top-0border-b border-orange-100 bg-[#FFF8F2]/95 px-5 py-4 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
         <NavLink to="/" className="flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-100 text-xl font-black text-orange-700">

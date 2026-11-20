@@ -1,6 +1,8 @@
 .portal {
   color: #1e293b;
   display: grid;
+  /* Cột co theo màn hình; tránh select/tiêu đề dài kéo giãn trang trên mobile. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
 .portal h1 {
