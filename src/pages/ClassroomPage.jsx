@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { LiveKitRoom } from '@livekit/components-react';
 import { VideoPresets } from 'livekit-client';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useClassroomSession } from '../hooks/useClassroomSession.js';
+import { useOnlineScheduleWatcher } from '../hooks/useOnlineScheduleWatcher.js';
+import { getOnlineSession } from '../services/classroomApi.js';
 import { PreJoinPanel } from '../components/Classroom/PreJoinPanel.jsx';
 import { SessionEndedScreen } from '../components/Classroom/SessionEndedScreen.jsx';
 import ClassroomExperience from '../components/Classroom/ClassroomExperience.jsx';
@@ -14,8 +16,19 @@ export default function ClassroomPage() {
   const navigate = useNavigate();
   const flow = useClassroomSession(scheduleId);
   const back = () => { flow.finish('left'); navigate('/online'); };
+  const removed = flow.state === 'removed';
+  const [readmitted, setReadmitted] = useState(false);
+  useEffect(() => { if (!removed) setReadmitted(false); }, [removed]);
+  // Khi bị mời ra, nghe sự kiện giáo viên cho vào lại rồi kiểm tra lại trạng thái từ API.
+  const recheckAdmission = useCallback(async () => {
+    try {
+      const info = await getOnlineSession(scheduleId);
+      if (info?.me?.admissionStatus !== 'removed' && info?.session?.status !== 'ended') setReadmitted(true);
+    } catch { /* Giữ màn hiện tại; lần sự kiện sau sẽ kiểm tra lại. */ }
+  }, [scheduleId]);
+  useOnlineScheduleWatcher(removed && scheduleId ? [scheduleId] : [], undefined, recheckAdmission, recheckAdmission);
   if (!scheduleId) return <Navigate to="/online" replace />;
-  if (['ended', 'removed', 'duplicate', 'disconnected'].includes(flow.state)) return <SessionEndedScreen state={flow.state} onBack={back} />;
+  if (['ended', 'removed', 'duplicate', 'disconnected'].includes(flow.state)) return <SessionEndedScreen state={flow.state} onBack={back} onRejoin={removed && readmitted ? flow.retry : undefined} />;
   if (flow.state === 'left') return null;
   if (flow.state === 'live' && flow.joinData) {
     const data = { ...flow.joinData, className: flow.joinData.className || flow.detail?.className, classId: flow.detail?.classId ?? flow.joinData.classId, features: flow.detail?.features || {}, isHost: flow.detail?.me?.isHost ?? flow.joinData.isHost };

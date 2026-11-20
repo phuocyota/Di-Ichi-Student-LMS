@@ -84,3 +84,11 @@ it("waits for database readiness and ignores stale/forged acknowledgements", () 
   expect(result.current).toBe(true);
   expect(reload).toHaveBeenCalledOnce();
 });
+it("chuyển sự kiện classroom:admission-changed đúng buổi học", () => {
+  const admission = vi.fn();
+  renderHook(() => useOnlineScheduleWatcher(["s1"], undefined, undefined, admission));
+  act(() => handlers["classroom:admission-changed"]({ scheduleId: "other" }));
+  expect(admission).not.toHaveBeenCalled();
+  act(() => handlers["classroom:admission-changed"]({ scheduleId: "s1", admissionStatus: "admitted" }));
+  expect(admission).toHaveBeenCalledExactlyOnceWith({ scheduleId: "s1", admissionStatus: "admitted" });
+});

@@ -2,11 +2,11 @@
 import { createRealtimeSocket } from "../services/realtime.js";
 import { disposeRealtimeSocket } from "../services/socketSession.js";
 import { subscribeSocket } from "../services/socketSubscription.js";
-export function useOnlineScheduleWatcher(scheduleIds, onStarted, onEnded) {
+export function useOnlineScheduleWatcher(scheduleIds, onStarted, onEnded, onAdmission) {
   const [connected, setConnected] = useState(false);
   const latest = useRef({ onStarted, onEnded });
   useEffect(() => {
-    latest.current = { onStarted, onEnded };
+    latest.current = { onStarted, onEnded, onAdmission };
   });
   const scheduleKey = [...new Set(scheduleIds)]
     .filter(Boolean)
@@ -36,6 +36,9 @@ export function useOnlineScheduleWatcher(scheduleIds, onStarted, onEnded) {
     });
     client.on("classroom:ended", (event) => {
       if (ids.includes(event?.scheduleId)) latest.current.onEnded?.(event);
+    });
+    client.on("classroom:admission-changed", (event) => {
+      if (ids.includes(event?.scheduleId)) latest.current.onAdmission?.(event);
     });
     return () => {
       stop();

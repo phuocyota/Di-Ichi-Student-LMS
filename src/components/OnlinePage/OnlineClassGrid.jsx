@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import OnlineClassCard from './OnlineClassCard.jsx';
 import { getOnlineSchedules } from '../../services/classroomApi.js';
 import { useOnlineScheduleWatcher } from '../../hooks/useOnlineScheduleWatcher.js';
+import { useScheduleBoundaryRefresh } from '../../hooks/useScheduleBoundaryRefresh.js';
 
 function OnlineClassGrid() {
   const [classes, setClasses] = useState([]);
@@ -25,14 +26,15 @@ function OnlineClassGrid() {
   useResourceUpdates(() => load({ silent: true }), ['schedule','class','class-staff','enrollment','workspace','portal']);
   useEffect(() => {
     void load();
-    const timer = window.setInterval(() => load({ silent: true }), 15000);
     const onFocus = () => load({ silent: true });
     window.addEventListener('focus', onFocus);
     return () => {
-      window.clearInterval(timer);
       window.removeEventListener('focus', onFocus);
     };
   }, [load]);
+  // Mốc mở/đóng lớp tính từ joinAvailableAt/joinClosesAt; dữ liệu khác đến qua socket.
+  const silentLoad = useCallback(() => load({ silent: true }), [load]);
+  useScheduleBoundaryRefresh(classes, silentLoad);
 
   const scheduleIds = useMemo(() => classes.map((item) => item.scheduleId), [classes]);
   const onStarted = useCallback((event) => {

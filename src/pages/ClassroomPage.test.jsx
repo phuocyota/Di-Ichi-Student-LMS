@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import React from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Page from './ClassroomPage.jsx';
@@ -8,7 +8,8 @@ import { getOnlineSession, joinClassroom } from '../services/classroomApi.js';
 import fixture from '../hooks/__fixtures__/onlineSession.json';
 import joinFixture from '../hooks/__fixtures__/classroomJoin.json';
 globalThis.React = React;
-const mock = vi.hoisted(() => ({ roomProps: null }));
+const mock = vi.hoisted(() => ({ roomProps: null, watcher: null }));
+vi.mock('../hooks/useOnlineScheduleWatcher.js', () => ({ useOnlineScheduleWatcher: (ids, onStarted, onEnded, onAdmission) => { mock.watcher = { ids, onAdmission }; return true; } }));
 vi.mock('@livekit/components-react', () => ({
   PreJoin: ({ onSubmit }) => <button onClick={() => onSubmit({ audioEnabled: true, videoEnabled: true, audioDeviceId: 'mic-1', videoDeviceId: 'cam-1' })}>Use devices</button>,
   LiveKitRoom: props => { mock.roomProps = props; return <div data-testid="live-room">{props.children}</div>; },
@@ -49,4 +50,19 @@ it('respects backend media permissions even when selected in prejoin', async () 
   await waitFor(() => expect(screen.getByTestId('live-room')).toBeInTheDocument());
   expect(mock.roomProps.audio).toBe(false);
   expect(mock.roomProps.video).toBe(false);
+});
+it('hiện nút vào lại khi giáo viên cho học sinh vào lại sau khi bị mời ra', async () => {
+  joinClassroom.mockResolvedValueOnce({ token: null, admission: 'removed' });
+  mount();
+  fireEvent.click(await screen.findByText('Use devices'));
+  await screen.findByText('Bạn đã được mời ra khỏi lớp');
+  expect(mock.watcher.ids).toEqual(['schedule-id']);
+  expect(screen.queryByRole('button', { name: 'Vào lại lớp' })).toBeNull();
+  getOnlineSession.mockResolvedValue({ ...fixture, me: { ...fixture.me, admissionStatus: 'removed' }, session: { status: 'active' } });
+  await act(async () => mock.watcher.onAdmission({ scheduleId: 'schedule-id' }));
+  expect(screen.queryByRole('button', { name: 'Vào lại lớp' })).toBeNull();
+  getOnlineSession.mockResolvedValue({ ...fixture, me: { ...fixture.me, admissionStatus: 'admitted' }, session: { status: 'active' } });
+  await act(async () => mock.watcher.onAdmission({ scheduleId: 'schedule-id' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Vào lại lớp' }));
+  await screen.findByText('Use devices');
 });
